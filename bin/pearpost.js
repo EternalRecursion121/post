@@ -25,6 +25,9 @@ Usage:
   pearpost room join <serialized>       join a room
   pearpost room send <id> <text...>     send chat to a joined room
   pearpost rooms                        list joined rooms
+  pearpost mcp list <addr>              list MCP tools on a peer
+  pearpost mcp call <addr> <tool> <json>  call an MCP tool on a peer
+  pearpost mcp host <stdio-cmd...>      bridge a local stdio MCP server out to peers
 
 Env:
   PEARPOST_HOME    storage dir (default ~/.pearpost)
@@ -129,6 +132,40 @@ async function run () {
         console.log(`${r.id}  ${r.name || ''}`)
       }
       return shutdown(agent)
+    }
+
+    case 'mcp': {
+      const sub = rest[0]
+      if (sub === 'list') {
+        const peer = rest[1]
+        if (!peer) throw new Error('mcp list: need peer address')
+        const tools = await agent.mcpListTools(peer, { timeout: 30000 })
+        for (const t of tools) {
+          console.log(`${t.name}\t${t.description || ''}`)
+        }
+        return shutdown(agent)
+      }
+      if (sub === 'call') {
+        const [, peer, tool, json = '{}'] = rest
+        if (!peer || !tool) throw new Error('mcp call: need peer and tool')
+        const res = await agent.mcpCallTool(peer, tool, JSON.parse(json), { timeout: 120000 })
+        console.log(JSON.stringify(res, null, 2))
+        return shutdown(agent)
+      }
+      if (sub === 'host') {
+        // Hand off to the bridge. We import it dynamically by re-execing
+        // so the bridge owns its own agent lifecycle (it needs swarm).
+        await agent.stop()
+        const { spawn } = await import('child_process')
+        const path = await import('path')
+        const url = await import('url')
+        const here = path.dirname(url.fileURLToPath(import.meta.url))
+        const bridge = path.join(here, 'pearpost-mcp-bridge.js')
+        const child = spawn(process.execPath, [bridge, ...rest.slice(1)], { stdio: 'inherit' })
+        child.on('exit', code => process.exit(code ?? 0))
+        return
+      }
+      throw new Error('mcp: unknown subcommand ' + (sub || ''))
     }
 
     case 'room': {
