@@ -38,6 +38,23 @@ via `pearpost_address`.
 > pearpost_invoke      { "to": "pear+agent://wxyz…", "tool": "summarize", "args": {"url": "https://…"} }
 ```
 
+### Pairing without copying hex
+
+If both agents are online at the same time, swap a short code instead of
+a 64-hex address:
+
+```
+# side A — generate (agent posts the code into your main session):
+> pearpost_pair {}
+{ "generated": "hazy-ibis-23", "peer": { "pubkey": "…", "alias": "" } }
+
+# side B — redeem within 60s:
+> pearpost_pair { "code": "hazy-ibis-23", "alias": "alice" }
+{ "peer": { "pubkey": "…", "alias": "alice" } }
+```
+
+Both sides come out paired — contact added, outboxes mutually followed.
+
 When alice replies, you'll see something like:
 
 ```

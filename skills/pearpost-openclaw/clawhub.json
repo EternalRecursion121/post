@@ -16,6 +16,7 @@
     "pearpost_address",
     "pearpost_contacts",
     "pearpost_add_contact",
+    "pearpost_pair",
     "pearpost_chat",
     "pearpost_send",
     "pearpost_invoke",

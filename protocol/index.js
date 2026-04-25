@@ -21,12 +21,14 @@ import { Presence } from './presence.js'
 import { Ack } from './ack.js'
 import { Tasks } from './tasks.js'
 import { MCPServer, MCPClient } from './mcp.js'
+import { Pairing, generateCode } from './pairing.js'
 import { seal as sealEnvelope, open as openEnvelope } from './envelope.js'
 
 export { Room } from './rooms.js'
 export { TYPES } from './envelope.js'
 export { pubFromAddress } from './identity.js'
 export { MCPServer, MCPClient, MCP_PROTOCOL_VERSION } from './mcp.js'
+export { generateCode } from './pairing.js'
 
 export class Agent extends EventEmitter {
   constructor (storageDir, opts = {}) {
@@ -203,6 +205,37 @@ export class Agent extends EventEmitter {
     await this.directory.remove(hex)
     await this.inbox.unfollow(hex)
     return { pubkey: hex, blocked: !!block }
+  }
+
+  // ---- pairing ----
+  // Short-code pairing. Either side can initiate. Whichever side calls
+  // without a code receives a generated one (emitted via `code` event and
+  // returned in the resolved value). On success both peers add each other
+  // as contacts and start following each other's outboxes.
+  async pair ({ code, timeout, alias } = {}) {
+    const pairing = new Pairing(this.identity, () => this.directory.card())
+    if (!code) {
+      pairing.once('code', (c) => this.emit('pair-code', c))
+    }
+    const result = await pairing.run({ code, timeout })
+    const peer = result.peer
+    if (peer.pubkey === this.identity.pubHex) {
+      throw new Error('paired with self — use a different code')
+    }
+    if (await this.directory.isBlocked(peer.pubkey)) {
+      throw new Error('peer is blocked: unblock first')
+    }
+    const card = {
+      pubkey: peer.pubkey,
+      alias: alias || peer.alias || '',
+      blurb: peer.blurb || '',
+      capabilities: peer.capabilities || [],
+      ts: peer.ts || Date.now()
+    }
+    await this.directory.addManual(card)
+    await this.inbox.follow(card.pubkey)
+    if (this.swarm?.flush) await this.swarm.flush().catch(() => {})
+    return { code: result.code, peer: card }
   }
 
   async unblockContact (pubHexOrAddress) {

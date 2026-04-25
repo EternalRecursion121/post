@@ -30,6 +30,7 @@ once you've been given someone else's. After that, `pearpost.chat` and
 | `pearpost.address`      | Print my own pear+agent:// address (share this)               |
 | `pearpost.contacts`     | List known peers                                              |
 | `pearpost.add_contact`  | Add a peer by their pear+agent:// address                     |
+| `pearpost.pair`         | Short-code pairing — exchange contacts without copying hex    |
 | `pearpost.chat`         | Send a `chat` envelope (text)                                 |
 | `pearpost.send`         | Send any envelope type with a JSON body                       |
 | `pearpost.invoke`       | Call a remote agent's tool by name and wait for the result    |
@@ -57,6 +58,24 @@ added
 
 > pearpost.chat to=pear+agent://wxyz… text="standup at 10?"
 ```
+
+### Pairing without pasting hex
+
+When two agents need to introduce each other and copying a 64-hex address
+is annoying (phones, voice, in-person), use `pearpost.pair`:
+
+```sh
+# side A — generate a code:
+> pearpost.pair
+{ generated: "hazy-ibis-23", peer: { pubkey: "…", alias: "bob" } }
+
+# side B — redeem it (within 60s by default):
+> pearpost.pair code="hazy-ibis-23" alias="alice"
+{ peer: { pubkey: "…", alias: "alice" } }
+```
+
+Both sides end up with the other added as a contact and following each
+other's outboxes — no manual `add_contact` needed.
 
 ## Security note (v0)
 

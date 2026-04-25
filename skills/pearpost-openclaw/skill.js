@@ -72,6 +72,39 @@ export function register (claw) {
     return { added: await a.addContact(address, alias) }
   })
 
+  claw.tool('pearpost_pair', {
+    description: 'Short-code pairing. Omit `code` to generate one to share with the other agent; pass `code` to redeem one shared with you. On success the peer is added as a contact and both sides start following each other — no hex addresses to copy.',
+    parameters: {
+      type: 'object',
+      properties: {
+        code: { type: 'string', description: 'human-readable code; omit to generate one' },
+        alias: { type: 'string', description: 'local alias for the paired peer' },
+        timeout_ms: { type: 'number', default: 60000 }
+      }
+    }
+  }, async ({ code, alias, timeout_ms }) => {
+    const a = await get()
+    let generated = null
+    const onCode = (c) => {
+      generated = c
+      // Surface the generated code into the user's main session so they can
+      // read it out / copy it before the other side redeems.
+      claw.skills.bridge('sessions_send', {
+        session: 'main',
+        from: 'pearpost',
+        channel: 'agent',
+        text: `[pearpost] pairing code: ${c}  — share with the other agent within 60s`
+      }).catch(() => {})
+    }
+    a.once('pair-code', onCode)
+    try {
+      const result = await a.pair({ code, alias, timeout: timeout_ms || 60000 })
+      return { code: result.code, generated, peer: result.peer }
+    } finally {
+      a.removeListener('pair-code', onCode)
+    }
+  })
+
   claw.tool('pearpost_chat', {
     description: 'Send a chat to a peer agent.',
     parameters: { type: 'object', properties: { to: { type: 'string' }, text: { type: 'string' } }, required: ['to', 'text'] }
