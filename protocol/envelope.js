@@ -1,6 +1,27 @@
 import b4a from 'b4a'
+import sodium from 'sodium-native'
 import { ulid } from 'ulid'
 import { Identity } from './identity.js'
+
+const NONCE = sodium.crypto_secretbox_NONCEBYTES
+const MAC = sodium.crypto_secretbox_MACBYTES
+
+function sealRoom (plaintext, roomKey) {
+  const nonce = b4a.alloc(NONCE)
+  sodium.randombytes_buf(nonce)
+  const ct = b4a.alloc(plaintext.length + MAC)
+  sodium.crypto_secretbox_easy(ct, plaintext, nonce, roomKey)
+  return b4a.concat([nonce, ct])
+}
+
+function openRoom (combined, roomKey) {
+  if (combined.length < NONCE + MAC) return null
+  const nonce = combined.slice(0, NONCE)
+  const ct = combined.slice(NONCE)
+  const out = b4a.alloc(ct.length - MAC)
+  if (!sodium.crypto_secretbox_open_easy(out, ct, nonce, roomKey)) return null
+  return out
+}
 
 export const TYPES = [
   'chat',
@@ -23,9 +44,13 @@ function isDirectAddr (to) { return /^[0-9a-fA-F]{64}$/.test(to) }
 //
 // For direct messages, `attach` is folded INTO the sealed payload so that
 // drive keys are not visible to passive observers replicating the outbox —
-// only the recipient sees them. The outer `attach` field on the wire is
-// always [] for direct envelopes.
-export function seal ({ from, to, type, body, inReplyTo, attach }, identity) {
+// only the recipient sees them.
+//
+// For room messages, callers pass a `roomKey` (the 32-byte shared secret).
+// We secretbox-encrypt {body, attach} with that key, prefixed by a fresh
+// nonce. The outer `attach` field on the wire is always [] for sealed
+// envelopes (direct or room).
+export function seal ({ from, to, type, body, inReplyTo, attach, roomKey }, identity) {
   if (!TYPES.includes(type)) throw new Error('unknown envelope type: ' + type)
   const wireAttach = attach || []
   let outerAttach = wireAttach
@@ -35,9 +60,12 @@ export function seal ({ from, to, type, body, inReplyTo, attach }, identity) {
     const sealed = b4a.from(JSON.stringify({ body: body ?? {}, attach: wireAttach }))
     ciphertext = b4a.toString(identity.sealTo(recipient, sealed), 'base64')
     outerAttach = []
+  } else if (typeof to === 'string' && to.startsWith('room:') && roomKey) {
+    const sealed = b4a.from(JSON.stringify({ body: body ?? {}, attach: wireAttach }))
+    ciphertext = b4a.toString(sealRoom(sealed, roomKey), 'base64')
+    outerAttach = []
   } else {
-    // room or broadcast: cleartext at this layer. Rooms apply their own
-    // symmetric encryption in agent.sendRoom (see envelope/index wiring).
+    // broadcast (or room without a key — shouldn't happen via agent.sendRoom).
     ciphertext = b4a.toString(b4a.from(JSON.stringify(body ?? {})), 'base64')
   }
 
@@ -60,7 +88,9 @@ export function seal ({ from, to, type, body, inReplyTo, attach }, identity) {
 }
 
 // Verify signature; if envelope is direct + addressed to me, decrypt body.
-export function open (env, identity) {
+// For room envelopes the caller passes opts.roomKey (the shared secret) so
+// we can secretbox-decrypt the body.
+export function open (env, identity, opts = {}) {
   if (!env || env.v !== 0) return { ok: false, reason: 'bad version' }
   const fromPub = b4a.from(env.from, 'hex')
   const sig = b4a.from(env.sig, 'base64')
@@ -75,19 +105,15 @@ export function open (env, identity) {
     const ct = b4a.from(env.ciphertext, 'base64')
     const pt = identity.openSeal(ct)
     if (!pt) return { ok: false, reason: 'cannot decrypt' }
-    const sealed = JSON.parse(b4a.toString(pt))
-    if (sealed && Object.prototype.hasOwnProperty.call(sealed, 'body') &&
-        Object.prototype.hasOwnProperty.call(sealed, 'attach')) {
-      body = sealed.body
-      // Recover attach from inside the ciphertext — drive keys are private
-      // to the recipient. Mutate the env so downstream code sees attach as
-      // it always has.
-      env.attach = sealed.attach || []
-    } else {
-      body = sealed
-    }
+    body = unwrapSealed(pt, env)
+  } else if (typeof env.to === 'string' && env.to.startsWith('room:')) {
+    if (!opts.roomKey) return { ok: false, reason: 'no room key' }
+    const ct = b4a.from(env.ciphertext, 'base64')
+    const pt = openRoom(ct, opts.roomKey)
+    if (!pt) return { ok: false, reason: 'cannot decrypt room' }
+    body = unwrapSealed(pt, env)
   } else if (!direct) {
-    // room or broadcast — cleartext at this layer.
+    // broadcast — cleartext at this layer.
     body = JSON.parse(b4a.toString(b4a.from(env.ciphertext, 'base64')))
   } else {
     // direct, but not for me
@@ -95,6 +121,19 @@ export function open (env, identity) {
   }
 
   return { ok: true, env, body }
+}
+
+// Common shape for sealed payloads: { body, attach }. Recovers attach onto
+// env so downstream code (UI, attachments.read) sees it the way it always
+// has, even though the outer wire field was [].
+function unwrapSealed (plaintext, env) {
+  const obj = JSON.parse(b4a.toString(plaintext))
+  if (obj && Object.prototype.hasOwnProperty.call(obj, 'body') &&
+      Object.prototype.hasOwnProperty.call(obj, 'attach')) {
+    env.attach = obj.attach || []
+    return obj.body
+  }
+  return obj
 }
 
 function envWithoutSig (env) {

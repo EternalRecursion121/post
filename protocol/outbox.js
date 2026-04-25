@@ -12,14 +12,15 @@ export class Outbox {
   }
 
   // Build, sign, append. Returns the envelope.
-  async send ({ to, type, body, inReplyTo, attach }) {
+  async send ({ to, type, body, inReplyTo, attach, roomKey }) {
     const env = seal({
       from: this.identity.pubHex,
       to,
       type,
       body,
       inReplyTo,
-      attach
+      attach,
+      roomKey
     }, this.identity)
     await this.core.append(encode(env))
     return env

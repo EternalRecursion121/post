@@ -131,7 +131,7 @@ export class Agent extends EventEmitter {
     for await (const { value } of roomBee.createReadStream()) {
       const room = Room.deserialize(b4a.toString(value))
       this._joinedRooms.set(room.id, room)
-      this.inbox.joinRoom(room.id)
+      this.inbox.joinRoom(room.id, room.key)
     }
 
     // Catch up on existing contacts (follow their outboxes).
@@ -247,7 +247,7 @@ export class Agent extends EventEmitter {
   async _registerRoom (room) {
     await this._roomBee.put(room.id, b4a.from(room.serialize()))
     this._joinedRooms.set(room.id, room)
-    this.inbox.joinRoom(room.id)
+    this.inbox.joinRoom(room.id, room.key)
     return room
   }
 
@@ -261,9 +261,11 @@ export class Agent extends EventEmitter {
       to: room.to,
       type, body,
       inReplyTo: opts.inReplyTo,
-      attach
+      attach,
+      roomKey: room.key
     })
-    await this.inbox.record(env, body)
+    // Mirror locally with attach restored — wire copy is sealed.
+    await this.inbox.record({ ...env, attach: attach || [] }, body)
     return env
   }
 

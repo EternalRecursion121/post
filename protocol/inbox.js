@@ -18,11 +18,14 @@ export class Inbox extends EventEmitter {
     this.bee = bee          // Hyperbee — sorted message log
     this.cursors = cursors  // Hyperbee — peerHex -> last processed length
     this.watching = new Map() // peerHex -> core
-    this.rooms = new Set()  // hex room ids we accept envelopes for
+    this.rooms = new Map()  // idHex -> 32-byte secret key (Buffer)
   }
 
-  joinRoom (roomKeyHex) { this.rooms.add(roomKeyHex) }
-  leaveRoom (roomKeyHex) { this.rooms.delete(roomKeyHex) }
+  joinRoom (roomIdHex, roomKey) {
+    if (!roomKey) throw new Error('joinRoom requires the 32-byte room key')
+    this.rooms.set(roomIdHex, b4a.isBuffer(roomKey) ? roomKey : b4a.from(roomKey, 'hex'))
+  }
+  leaveRoom (roomIdHex) { this.rooms.delete(roomIdHex) }
 
   stop () {
     this._stopped = true
@@ -111,11 +114,13 @@ export class Inbox extends EventEmitter {
       if (!env) continue
       // Filter rooms before opening so we don't materialize chatter from
       // rooms we haven't joined.
+      let roomKey = null
       if (env.to && env.to.startsWith('room:')) {
         const roomId = env.to.slice('room:'.length)
         if (!this.rooms.has(roomId)) continue
+        roomKey = this.rooms.get(roomId)
       }
-      const result = open(env, this.identity)
+      const result = open(env, this.identity, { roomKey })
       if (!result.ok) continue
       const beeKey = recordKey(env)
       const record = { env, body: result.body }
