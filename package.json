@@ -1,0 +1,40 @@
+{
+  "name": "pearpost",
+  "version": "0.0.1",
+  "description": "P2P agent inbox protocol on Pears",
+  "type": "module",
+  "main": "app/app.js",
+  "bin": {
+    "pearpost": "bin/pearpost.js"
+  },
+  "scripts": {
+    "cli": "node bin/pearpost.js",
+    "dev": "pear run --dev .",
+    "stage": "pear stage dev"
+  },
+  "pear": {
+    "name": "pearpost",
+    "type": "desktop",
+    "main": "app/app.js",
+    "gui": {
+      "backgroundColor": "#0f1117",
+      "width": 1200,
+      "height": 800
+    }
+  },
+  "dependencies": {
+    "autobase": "^7.6.0",
+    "b4a": "^1.6.7",
+    "compact-encoding": "^2.16.0",
+    "corestore": "^7.4.0",
+    "hyperbee": "^2.20.0",
+    "hypercore": "^11.0.0",
+    "hyperdrive": "^12.0.0",
+    "hyperswarm": "^4.17.0",
+    "sodium-native": "^5.0.1",
+    "ulid": "^2.3.0"
+  },
+  "devDependencies": {
+    "pear-electron": "^1.7.28"
+  }
+}

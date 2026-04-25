@@ -1,0 +1,19 @@
+node_modules/
+*.log
+.DS_Store
+
+# Pears / Hypercore runtime data
+.pear/
+store/
+**/store/
+data/
+**/data/
+
+# Per-instance dev sandboxes used in two-terminal smoke tests
+/tmp-*
+/sandbox-*
+
+# Editor cruft
+.idea/
+.vscode/
+*.swp
