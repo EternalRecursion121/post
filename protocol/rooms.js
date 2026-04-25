@@ -32,8 +32,10 @@ export class Room {
     return new Room(k, { name })
   }
 
-  async send (outbox, { type, body, inReplyTo, attach }) {
-    return outbox.send({ to: this.to, type, body, inReplyTo, attach })
+  async send (outbox, { type, body, inReplyTo, attach }, mirror) {
+    const env = await outbox.send({ to: this.to, type, body, inReplyTo, attach })
+    if (mirror) await mirror.record(env, body)
+    return env
   }
 
   // Convenience: pack a room into a shareable string.

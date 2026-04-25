@@ -18,6 +18,20 @@ export class Inbox extends EventEmitter {
     this.bee = bee          // Hyperbee — sorted message log
     this.cursors = cursors  // Hyperbee — peerHex -> last processed length
     this.watching = new Map() // peerHex -> core
+    this.rooms = new Set()  // hex room ids we accept envelopes for
+  }
+
+  joinRoom (roomKeyHex) { this.rooms.add(roomKeyHex) }
+  leaveRoom (roomKeyHex) { this.rooms.delete(roomKeyHex) }
+
+  // Mirror an envelope we just SENT into our own inbox so threads include
+  // both sides without us having to decrypt our own ciphertext (which we
+  // can't — sealed-box is one-way to the recipient).
+  async record (env, body) {
+    const beeKey = recordKey(env)
+    const record = { env, body }
+    await this.bee.put(beeKey, b4a.from(JSON.stringify(record)))
+    this.emit('message', { key: beeKey, ...record })
   }
 
   async ready () {
@@ -35,7 +49,12 @@ export class Inbox extends EventEmitter {
 
     if (b4a.equals(key, this.identity.pub)) return // don't follow self
 
-    const core = this.store.get({ key })
+    // Open the peer's outbox by signer pubkey so corestore reproduces the
+    // same manifest (and therefore the same core.key) the owner used. If we
+    // passed { key } directly we'd be passing the signer pubkey as if it
+    // were a manifest hash — corestore would create a different core and
+    // replication would never match.
+    const core = this.store.get({ keyPair: { publicKey: key } })
     await core.ready()
     this.watching.set(hex, core)
 
@@ -58,6 +77,12 @@ export class Inbox extends EventEmitter {
       try { buf = await core.get(i, { wait: true, timeout: 15000 }) } catch { break }
       const env = safeDecode(buf)
       if (!env) continue
+      // Filter rooms before opening so we don't materialize chatter from
+      // rooms we haven't joined.
+      if (env.to && env.to.startsWith('room:')) {
+        const roomId = env.to.slice('room:'.length)
+        if (!this.rooms.has(roomId)) continue
+      }
       const result = open(env, this.identity)
       if (!result.ok) continue
       const beeKey = recordKey(env)

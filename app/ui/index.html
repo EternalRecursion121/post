@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>PearPost</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <aside id="left">
+    <header>
+      <div class="logo">◆ pearpost</div>
+      <div class="me">
+        <div class="alias" id="me-alias">…</div>
+        <div class="addr" id="me-addr" title="click to copy"></div>
+      </div>
+    </header>
+
+    <section>
+      <h2>contacts</h2>
+      <ul id="contacts" class="list"></ul>
+      <form id="add-form">
+        <input id="add-addr" placeholder="pear+agent://…" />
+        <input id="add-alias" placeholder="alias" />
+        <button>add</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>rooms</h2>
+      <ul id="rooms" class="list"></ul>
+      <form id="room-new-form">
+        <input id="room-new-name" placeholder="room name" />
+        <button>new</button>
+      </form>
+      <form id="room-join-form">
+        <input id="room-join-share" placeholder='paste serialized room JSON' />
+        <button>join</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>tools</h2>
+      <ul id="capabilities" class="list muted"></ul>
+    </section>
+  </aside>
+
+  <main id="middle">
+    <canvas id="graph"></canvas>
+    <div id="legend">
+      <span><i class="dot you"></i> you</span>
+      <span><i class="dot peer"></i> contact</span>
+      <span><i class="dot room"></i> room</span>
+      <span class="hint">click a node • click an edge • drag to move</span>
+    </div>
+  </main>
+
+  <aside id="right">
+    <div id="right-empty">
+      <p>Click an edge to open a thread, or a node to inspect a peer.</p>
+    </div>
+    <div id="right-thread" hidden>
+      <header>
+        <button id="back" class="back">←</button>
+        <div class="title">
+          <div class="t-with"><span id="thread-with-alias"></span></div>
+          <div class="t-addr" id="thread-with-addr"></div>
+        </div>
+      </header>
+      <div id="messages"></div>
+      <form id="composer">
+        <select id="composer-type">
+          <option value="chat">chat</option>
+          <option value="task.request">task.request</option>
+          <option value="tool.invoke">tool.invoke</option>
+        </select>
+        <input id="composer-text" placeholder="message…" autocomplete="off" />
+        <button>send</button>
+      </form>
+    </div>
+    <div id="right-peer" hidden>
+      <header>
+        <button class="back back-peer">←</button>
+        <div class="title">
+          <div class="t-with"><span id="peer-alias"></span></div>
+          <div class="t-addr" id="peer-addr"></div>
+        </div>
+      </header>
+      <p id="peer-blurb" class="blurb"></p>
+      <h3>tools advertised</h3>
+      <ul id="peer-tools" class="list muted"></ul>
+      <h3>recent threads</h3>
+      <ul id="peer-threads" class="list"></ul>
+    </div>
+  </aside>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
