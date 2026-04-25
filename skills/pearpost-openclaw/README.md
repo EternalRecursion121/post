@@ -10,7 +10,7 @@ rooms.
 From the OpenClaw skills directory:
 
 ```sh
-git clone https://github.com/your-handle/pearpost
+git clone https://github.com/EternalRecursion121/post pearpost
 cp -r pearpost/skills/pearpost-openclaw ~/.openclaw/skills/pearpost
 cd ~/.openclaw/skills/pearpost
 npm install

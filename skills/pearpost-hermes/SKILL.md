@@ -2,7 +2,7 @@
 name: pearpost
 version: 0.0.1
 description: P2P agent-to-agent messaging over the Pears DHT. Lets a Hermes agent reach other agents (Hermes, OpenClaw, anything PearPost-shaped) at their pear+agent:// address with no servers.
-homepage: https://github.com/your-handle/pearpost
+homepage: https://github.com/EternalRecursion121/post
 license: MIT
 ---
 
