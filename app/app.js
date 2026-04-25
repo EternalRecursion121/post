@@ -25,12 +25,21 @@ const ALIAS = process.env.PEARPOST_ALIAS || os.userInfo().username
 const PORT = parseInt(process.env.PEARPOST_PORT || '7777', 10)
 
 const agent = new Agent(HOME, { profile: { alias: ALIAS } })
+agent.on('error', (err) => console.warn('agent error:', err.message || err))
 await agent.start()
 console.log('agent ready as', agent.address)
+
+// Ship a built-in echo task handler so the demo always has something to fan
+// out to. Removable.
+agent.registerTask('echo', async (args) => ({ echoed: args, at: Date.now() }))
+agent.registerTool('echo', async (args) => ({ echoed: args, at: Date.now() }))
 
 const sseClients = new Set()
 agent.on('message', (rec) => broadcast({ kind: 'message', record: serializeRecord(rec) }))
 agent.on('peer', (card) => broadcast({ kind: 'peer', card }))
+agent.on('presence', (info) => broadcast({ kind: 'presence', presence: info }))
+agent.on('delivered', (info) => broadcast({ kind: 'delivered', delivered: info }))
+agent.on('task', (info) => broadcast({ kind: 'task', task: info }))
 
 const server = http.createServer(async (req, res) => {
   try {
@@ -47,20 +56,39 @@ const server = http.createServer(async (req, res) => {
       const list = await agent.thread(id)
       return json(res, list.map(serializeRecord))
     }
+    if (req.method === 'GET' && req.url.startsWith('/attach')) {
+      const u = new URL(req.url, 'http://x')
+      const key = u.searchParams.get('key')
+      const name = u.searchParams.get('name')
+      if (!key || !name) { res.writeHead(400); return res.end('need key + name') }
+      const buf = await agent.readAttachment({ key, name })
+      if (!buf) { res.writeHead(404); return res.end('not found') }
+      res.writeHead(200, { 'content-type': 'application/octet-stream', 'content-disposition': `attachment; filename="${encodeURIComponent(name)}"` })
+      return res.end(buf)
+    }
     if (req.method === 'POST' && req.url === '/chat') {
-      const { to, text } = await body(req)
-      const env = await agent.chat(to, text)
+      const { to, text, attach } = await body(req)
+      const env = await agent.chat(to, text, attach && { attach })
       return json(res, { id: env.id })
     }
     if (req.method === 'POST' && req.url === '/send') {
-      const { to, type, body: b, inReplyTo } = await body(req)
-      const env = await agent.send(to, type, b, { inReplyTo })
+      const { to, type, body: b, inReplyTo, attach } = await body(req)
+      const env = await agent.send(to, type, b, { inReplyTo, attach })
       return json(res, { id: env.id })
     }
     if (req.method === 'POST' && req.url === '/invoke') {
       const { to, tool, args } = await body(req)
       const value = await agent.invoke(to, tool, args, { timeout: 30000 })
       return json(res, { value })
+    }
+    if (req.method === 'POST' && req.url === '/task') {
+      const { to, title, args, description } = await body(req)
+      try {
+        const value = await agent.task(to, { title, args, description })
+        return json(res, { ok: true, value })
+      } catch (e) {
+        return json(res, { ok: false, error: e.message })
+      }
     }
     if (req.method === 'POST' && req.url === '/contacts/add') {
       const { address, alias } = await body(req)
@@ -97,13 +125,19 @@ server.listen(PORT, '127.0.0.1', () => {
 })
 
 async function me () {
+  const presence = {}
+  for (const [k, v] of agent.presence?.peers || []) {
+    presence[k] = { state: agent.presence.classify(k), lastSeen: v.lastSeen, capabilities: v.capabilities || [] }
+  }
   return {
     address: agent.address,
     pubHex: agent.pubHex,
     alias: ALIAS,
     contacts: await agent.contacts(),
     rooms: agent.rooms().map(r => ({ id: r.id, name: r.name, share: r.serialize() })),
-    capabilities: agent.directory.profile.capabilities || []
+    capabilities: agent.directory.profile.capabilities || [],
+    tasks: agent.tasks?.list?.().map(t => ({ id: t.id, status: t.status, title: t.req?.title, to: t.req?.to, parent: t.parent, children: [...(t.children || [])] })) || [],
+    presence
   }
 }
 
@@ -159,10 +193,7 @@ function staticFile (req, res) {
 }
 
 function maybeOpenPearWindow (url) {
-  // If launched under Pears, the global `Pear` is defined and we can ask
-  // the runtime for an Electron window. Otherwise we leave it to the user.
   if (typeof globalThis.Pear === 'undefined') return
-  // pear-electron is loaded lazily so this file still runs under plain node
   import('pear-electron').then(({ default: electron }) => {
     if (!electron) return
     const win = new electron.BrowserWindow({ width: 1200, height: 800, backgroundColor: '#0f1117' })

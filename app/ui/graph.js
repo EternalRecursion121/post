@@ -1,19 +1,23 @@
-// Force-directed agent graph. Vanilla JS / canvas. Small enough to read.
-// Nodes settle into orbits via repulsion + spring forces; edges visualise
-// active threads (thickness = volume, animated pulses on new envelopes).
+// Force-directed agent graph. Vanilla JS / canvas.
+//
+// Nodes settle into orbits via repulsion + spring forces. Edges visualise
+// active threads (thickness = volume, animated pulses on each new envelope).
+// Pulse colour reflects the envelope type (chat / tool / task / ack /
+// presence). Presence halos show online/away/unknown peer state.
 
 export class Graph {
   constructor (canvas, opts = {}) {
     this.canvas = canvas
     this.ctx = canvas.getContext('2d')
     this.opts = opts
-    this.nodes = []     // { id, label, kind, x, y, vx, vy, r }
-    this.edges = []     // { a, b, count, lastTs, types[] }
-    this.pulses = []    // { from, to, t0 }
+    this.nodes = []
+    this.edges = []
+    this.pulses = []
     this.dragging = null
     this.hover = null
     this.hoverEdge = null
     this.lastFrame = 0
+    this._dirty = true
 
     window.addEventListener('resize', () => this.resize())
     canvas.addEventListener('mousemove', (e) => this.onMove(e))
@@ -36,7 +40,6 @@ export class Graph {
   }
 
   update (nodes, edges) {
-    // Preserve positions for nodes we already had.
     const existing = new Map(this.nodes.map(n => [n.id, n]))
     this.nodes = nodes.map((n, i) => {
       const old = existing.get(n.id)
@@ -53,9 +56,11 @@ export class Graph {
     this.edges = edges
   }
 
-  pulse (fromId, toId) {
-    this.pulses.push({ from: fromId, to: toId, t0: performance.now() })
+  pulse (fromId, toId, opts = {}) {
+    this.pulses.push({ from: fromId, to: toId, t0: performance.now(), type: opts.type || 'chat' })
   }
+
+  requestRedraw () { this._dirty = true }
 
   tick (t) {
     const dt = Math.min(0.05, (t - this.lastFrame) / 1000 || 0.016)
@@ -73,7 +78,6 @@ export class Graph {
     for (let i = 0; i < this.nodes.length; i++) {
       const a = this.nodes[i]
       a.fx = 0; a.fy = 0
-      // gravity to centre
       a.fx += (cx - a.x) * gravity
       a.fy += (cy - a.y) * gravity
       for (let j = 0; j < this.nodes.length; j++) {
@@ -101,7 +105,6 @@ export class Graph {
       n.vx = (n.vx + n.fx * dt) * friction
       n.vy = (n.vy + n.fy * dt) * friction
       n.x += n.vx; n.y += n.vy
-      // keep on screen
       n.x = Math.max(40, Math.min(this.w - 40, n.x))
       n.y = Math.max(40, Math.min(this.h - 40, n.y))
     }
@@ -118,8 +121,12 @@ export class Graph {
       if (!a || !b) continue
       const w = Math.min(5, 0.6 + Math.log2(1 + e.count))
       const recent = (Date.now() - e.lastTs) < 60_000
-      ctx.strokeStyle = recent ? 'rgba(110,231,183,0.65)' : 'rgba(138,180,248,0.25)'
-      if (e === this.hoverEdge) ctx.strokeStyle = '#6ee7b7'
+      const taskActive = e.recentTaskFan && (Date.now() - e.recentTaskFan) < 30_000
+      let stroke = 'rgba(138,180,248,0.25)'
+      if (recent) stroke = 'rgba(110,231,183,0.65)'
+      if (taskActive) stroke = 'rgba(192,132,252,0.85)'
+      if (e === this.hoverEdge) stroke = '#6ee7b7'
+      ctx.strokeStyle = stroke
       ctx.lineWidth = w
       ctx.beginPath()
       ctx.moveTo(a.x, a.y)
@@ -136,14 +143,25 @@ export class Graph {
       const t = (now - p.t0) / 1500
       const x = a.x + (b.x - a.x) * t
       const y = a.y + (b.y - a.y) * t
-      ctx.fillStyle = 'rgba(110,231,183,' + (1 - t) + ')'
+      const colour = pulseColour(p.type, 1 - t)
+      ctx.fillStyle = colour
       ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill()
     }
 
     // nodes
     for (const n of this.nodes) {
       const colour = n.kind === 'you' ? '#8ab4ff' : n.kind === 'room' ? '#c084fc' : '#ffd166'
-      // halo
+      // presence halo
+      let presence = null
+      if (this.opts.presenceFor) presence = this.opts.presenceFor(n.id)
+      if (presence === 'online') {
+        ctx.fillStyle = hexA('#6ee7b7', 0.20)
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 10, 0, Math.PI * 2); ctx.fill()
+      } else if (presence === 'away') {
+        ctx.fillStyle = hexA('#ffd166', 0.12)
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 8, 0, Math.PI * 2); ctx.fill()
+      }
+      // hover halo
       if (n === this.hover || (this.opts.isMe && this.opts.isMe(n.id))) {
         ctx.fillStyle = hexA(colour, 0.15)
         ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 8, 0, Math.PI * 2); ctx.fill()
@@ -151,7 +169,6 @@ export class Graph {
       // body
       ctx.fillStyle = colour
       if (n.kind === 'room') {
-        // square for rooms
         ctx.fillRect(n.x - n.r, n.y - n.r, n.r * 2, n.r * 2)
       } else {
         ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.fill()
@@ -164,7 +181,6 @@ export class Graph {
     }
   }
 
-  // ---- mouse ----
   pick (x, y) {
     let best = null
     for (const n of this.nodes) {
@@ -209,6 +225,20 @@ export class Graph {
     const ed = this.pickEdge(x, y)
     if (ed) return this.opts.onEdgeClick && this.opts.onEdgeClick(ed)
   }
+}
+
+function pulseColour (type, alpha) {
+  const palette = {
+    chat: '#6ee7b7',
+    'tool.invoke': '#ffd166',
+    'tool.result': '#ffd166',
+    'task.request': '#c084fc',
+    'task.result': '#c084fc',
+    presence: '#8ab4ff',
+    ack: '#8a90a6'
+  }
+  const hex = palette[type] || '#6ee7b7'
+  return hexA(hex, alpha)
 }
 
 function pos (e, canvas) {

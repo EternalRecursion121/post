@@ -24,10 +24,18 @@ export class Inbox extends EventEmitter {
   joinRoom (roomKeyHex) { this.rooms.add(roomKeyHex) }
   leaveRoom (roomKeyHex) { this.rooms.delete(roomKeyHex) }
 
+  stop () {
+    this._stopped = true
+    for (const [, core] of this.watching) {
+      try { core.removeAllListeners('append') } catch {}
+    }
+  }
+
   // Schedule a drain for a peer. Drains for the same peer are serialised
   // (re-running once if more appends happened during the current run) so
   // we never have two concurrent core.get waits racing for the same index.
   _scheduleDrain (hex, core) {
+    if (this._stopped) return
     if (this._draining?.has(hex)) {
       this._pending = this._pending || new Set()
       this._pending.add(hex)

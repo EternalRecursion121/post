@@ -42,6 +42,11 @@
       <h2>tools</h2>
       <ul id="capabilities" class="list muted"></ul>
     </section>
+
+    <section>
+      <h2>tasks</h2>
+      <ul id="task-tray" class="list muted"></ul>
+    </section>
   </aside>
 
   <main id="middle">
@@ -50,23 +55,29 @@
       <span><i class="dot you"></i> you</span>
       <span><i class="dot peer"></i> contact</span>
       <span><i class="dot room"></i> room</span>
-      <span class="hint">click a node • click an edge • drag to move</span>
+      <span><i class="halo online"></i> online</span>
+      <span><i class="halo away"></i> away</span>
+      <span class="hint">click node = peer • click edge = chat • drag to move</span>
     </div>
   </main>
 
   <aside id="right">
     <div id="right-empty">
-      <p>Click an edge to open a thread, or a node to inspect a peer.</p>
+      <p>Click a contact or edge to start a conversation, or right-click a contact to open its peer panel.</p>
     </div>
     <div id="right-thread" hidden>
       <header>
         <button id="back" class="back">←</button>
         <div class="title">
-          <div class="t-with"><span id="thread-with-alias"></span></div>
+          <div class="t-with"><i id="thread-presence" class="presence unknown"></i><span id="thread-with-alias"></span></div>
           <div class="t-addr" id="thread-with-addr"></div>
         </div>
       </header>
       <div id="messages"></div>
+      <div id="reply-chip" class="reply-chip" hidden>
+        <span id="reply-chip-text"></span>
+        <button id="reply-chip-close" type="button">×</button>
+      </div>
       <form id="composer">
         <select id="composer-type">
           <option value="chat">chat</option>
@@ -86,10 +97,23 @@
         </div>
       </header>
       <p id="peer-blurb" class="blurb"></p>
+      <button id="peer-open-chat" class="primary-btn">open chat ↩</button>
       <h3>tools advertised</h3>
       <ul id="peer-tools" class="list muted"></ul>
-      <h3>recent threads</h3>
-      <ul id="peer-threads" class="list"></ul>
+      <h3>invoke tool</h3>
+      <form id="peer-invoke-form">
+        <input id="peer-invoke-tool" placeholder="tool name" />
+        <input id="peer-invoke-args" placeholder='args JSON, e.g. {"x":1}' />
+        <button>invoke</button>
+      </form>
+      <h3>launch task</h3>
+      <form id="peer-task-form">
+        <input id="peer-task-title" placeholder="task title" />
+        <input id="peer-task-args" placeholder='args JSON, e.g. {"target":"x"}' />
+        <button>start</button>
+      </form>
+      <h3>presence</h3>
+      <ul id="peer-threads" class="list muted"></ul>
     </div>
   </aside>
 

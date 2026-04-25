@@ -20,11 +20,13 @@ import { Attachments } from './attachments.js'
 import { Presence } from './presence.js'
 import { Ack } from './ack.js'
 import { Tasks } from './tasks.js'
+import { MCPServer, MCPClient } from './mcp.js'
 import { seal as sealEnvelope, open as openEnvelope } from './envelope.js'
 
 export { Room } from './rooms.js'
 export { TYPES } from './envelope.js'
 export { pubFromAddress } from './identity.js'
+export { MCPServer, MCPClient, MCP_PROTOCOL_VERSION } from './mcp.js'
 
 export class Agent extends EventEmitter {
   constructor (storageDir, opts = {}) {
@@ -118,6 +120,12 @@ export class Agent extends EventEmitter {
     this.tasks.on('task', (t) => this.emit('task', t))
     this.tasks.on('update', (t) => this.emit('task', t))
 
+    this.mcp = new MCPServer(this.rpc, {
+      name: this.opts.profile?.alias || 'pearpost-mcp',
+      version: this.opts.mcpVersion || '0.1.0'
+    })
+    this.mcpClient = new MCPClient(this.rpc, { defaultTimeout: this.opts.mcpTimeout || 60000 })
+
     // Rejoin known rooms.
     this._roomBee = roomBee
     for await (const { value } of roomBee.createReadStream()) {
@@ -143,6 +151,12 @@ export class Agent extends EventEmitter {
 
   async stop () {
     try { if (this.presence) this.presence.stop() } catch {}
+    try { if (this.inbox) this.inbox.stop() } catch {}
+    // Wait for any in-flight drains to drop. A drain awaiting core.get can
+    // hold open a RocksDB session; closing the store underneath it raises.
+    if (this.inbox?._draining) {
+      try { await Promise.allSettled([...this.inbox._draining.values()]) } catch {}
+    }
     try { if (this.directory) await this.directory.stop() } catch {}
     try { if (this.swarm && this.swarm.destroy) await this.swarm.destroy() } catch {}
     try { await this.store.close() } catch {}
@@ -198,6 +212,23 @@ export class Agent extends EventEmitter {
     this.directory.setProfile({ capabilities: [...advertised] })
     return this
   }
+
+  // ---- mcp ----
+  registerMCPTool (name, def, handler) {
+    this.mcp.tool(name, def, handler)
+    const advertised = new Set(this.directory.profile.capabilities || [])
+    advertised.add('mcp:' + name)
+    this.directory.setProfile({ capabilities: [...advertised] })
+    return this
+  }
+
+  allowMCP (pubHex, names) { this.mcp.allow(normalizeTo(pubHex), names); return this }
+  allowMCPPublic () { this.mcp.allowPublic(); return this }
+
+  async mcpInitialize (peer, opts) { return this.mcpClient.initialize(normalizeTo(peer), opts) }
+  async mcpListTools (peer, opts) { return this.mcpClient.listTools(normalizeTo(peer), opts) }
+  async mcpCallTool (peer, name, args, opts) { return this.mcpClient.callTool(normalizeTo(peer), name, args, opts) }
+  async mcpPing (peer, opts) { return this.mcpClient.ping(normalizeTo(peer), opts) }
 
   // ---- rooms ----
   async createRoom (name = '') {
