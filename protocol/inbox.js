@@ -7,8 +7,10 @@ import { decode, open } from './envelope.js'
 // Threads are reconstructed by following inReplyTo through the bee.
 //
 // Emits:
-//   'message' (record) — { key, env, body } for any new envelope (direct,
-//                        room, or broadcast) we successfully opened
+//   'message' (record) — { key, env, body, bucket } for any new envelope
+//                        (direct, room, or broadcast) we successfully opened
+//   'rejected' (info)  — { env, reason, notify, autoBlocked } when an
+//                        inbound envelope is dropped by the abuse guard
 export class Inbox extends EventEmitter {
   constructor (store, swarm, identity, bee, cursors) {
     super()
@@ -19,7 +21,10 @@ export class Inbox extends EventEmitter {
     this.cursors = cursors  // Hyperbee — peerHex -> last processed length
     this.watching = new Map() // peerHex -> { core, onAppend }
     this.rooms = new Map()  // idHex -> 32-byte secret key (Buffer)
+    this.guard = null       // optional AbuseGuard
   }
+
+  setGuard (guard) { this.guard = guard }
 
   joinRoom (roomIdHex, roomKey) {
     if (!roomKey) throw new Error('joinRoom requires the 32-byte room key')
@@ -71,10 +76,11 @@ export class Inbox extends EventEmitter {
 
   // Mirror an envelope we just SENT into our own inbox so threads include
   // both sides without us having to decrypt our own ciphertext (which we
-  // can't — sealed-box is one-way to the recipient).
+  // can't — sealed-box is one-way to the recipient). Always lands in the
+  // main bucket — we initiated this exchange.
   async record (env, body) {
     const beeKey = recordKey(env)
-    const record = { env, body }
+    const record = { env, body, bucket: 'main' }
     await this.bee.put(beeKey, b4a.from(JSON.stringify(record)))
     this.emit('message', { key: beeKey, ...record })
   }
@@ -126,15 +132,29 @@ export class Inbox extends EventEmitter {
       // Filter rooms before opening so we don't materialize chatter from
       // rooms we haven't joined.
       let roomKey = null
-      if (env.to && env.to.startsWith('room:')) {
+      const isRoom = env.to && env.to.startsWith('room:')
+      if (isRoom) {
         const roomId = env.to.slice('room:'.length)
         if (!this.rooms.has(roomId)) continue
         roomKey = this.rooms.get(roomId)
       }
+      // Abuse guard runs on direct chat / tool.invoke. Room messages and
+      // other types skip rate limiting / sizing (members already implicitly
+      // trusted; ack and presence are tiny by construction).
+      let bucket = 'main'
+      if (this.guard && !isRoom) {
+        const ctSize = typeof env.ciphertext === 'string' ? env.ciphertext.length : 0
+        const verdict = await this.guard.checkInbound(env, ctSize)
+        if (!verdict.ok) {
+          this.emit('rejected', { env, ...verdict })
+          continue
+        }
+        bucket = verdict.bucket || 'main'
+      }
       const result = open(env, this.identity, { roomKey })
       if (!result.ok) continue
       const beeKey = recordKey(env)
-      const record = { env, body: result.body }
+      const record = { env, body: result.body, bucket }
       try {
         await this.bee.put(beeKey, b4a.from(JSON.stringify(record)))
       } catch (err) {
@@ -150,18 +170,31 @@ export class Inbox extends EventEmitter {
     await this.cursors.put(hex, b4a.from(String(to)))
   }
 
-  async list ({ limit = 100, reverse = true } = {}) {
+  // bucket: 'main' (default), 'requests', or 'all'. Records written before
+  // bucketing existed have no `bucket` field; treat those as 'main'.
+  async list ({ limit = 100, reverse = true, bucket = 'main' } = {}) {
     const out = []
-    for await (const { key, value } of this.bee.createReadStream({ reverse, limit })) {
-      out.push({ key: b4a.toString(key), ...JSON.parse(b4a.toString(value)) })
+    // We may need to over-read when filtering by bucket; cap at 10x to
+    // avoid unbounded scans on lopsided data.
+    const wantAll = bucket === 'all'
+    const target = limit
+    const scanLimit = wantAll ? limit : Math.min(limit * 10, 10_000)
+    for await (const { key, value } of this.bee.createReadStream({ reverse, limit: scanLimit })) {
+      const rec = JSON.parse(b4a.toString(value))
+      const recBucket = rec.bucket || 'main'
+      if (!wantAll && recBucket !== bucket) continue
+      out.push({ key: b4a.toString(key), ...rec, bucket: recBucket })
+      if (out.length >= target) break
     }
     return out
   }
 
   async thread (rootId) {
     // Walk forward from a given message id, collecting any messages that
-    // reference it (or its descendants) via inReplyTo.
-    const all = await this.list({ limit: 1000, reverse: false })
+    // reference it (or its descendants) via inReplyTo. Pull from every
+    // bucket so a thread that started in 'requests' and got promoted
+    // still renders coherently.
+    const all = await this.list({ limit: 1000, reverse: false, bucket: 'all' })
     const byId = new Map(all.map(r => [r.env.id, r]))
     const root = byId.get(rootId)
     if (!root) return []

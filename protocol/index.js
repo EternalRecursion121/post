@@ -21,6 +21,7 @@ import { Presence } from './presence.js'
 import { Ack } from './ack.js'
 import { Tasks } from './tasks.js'
 import { MCPServer, MCPClient } from './mcp.js'
+import { AbuseGuard, loadAbuseConfig } from './abuse.js'
 import { seal as sealEnvelope, open as openEnvelope } from './envelope.js'
 
 export { Room } from './rooms.js'
@@ -40,6 +41,8 @@ export class Agent extends EventEmitter {
     this.inbox = null
     this.directory = null
     this.rpc = null
+    this.abuse = null
+    this._contactSet = new Set() // pubHex of current contacts (for sync checks)
     this._joinedRooms = new Map()  // hex -> Room
   }
 
@@ -94,11 +97,32 @@ export class Agent extends EventEmitter {
 
     this.directory = await new Directory(this.identity, contactBee, this.opts.profile || {}, blockBee).ready()
     this.directory.on('peer', (card) => {
+      // Only manually-added peers count as "contacts" for the abuse
+      // layer. Gossip-discovered peers get their outbox followed (so
+      // their messages reach us) but their direct sends land in the
+      // requests quarantine until the user promotes them.
+      if (card.manual) this._contactSet.add(card.pubkey)
       this.inbox.follow(card.pubkey).catch(err => this.emit('error', err))
       this.emit('peer', card)
     })
 
-    this.rpc = new RPC(this.outbox, this.inbox)
+    // Abuse controls: size caps, per-peer rate limiting on non-contacts,
+    // auto-block heuristic. The Inbox runs the guard on inbound chat /
+    // tool.invoke before decrypt and bee.put. The RPC layer uses the same
+    // contact check for the contacts-only invoke gate.
+    const abuseCfg = loadAbuseConfig(process.env, this.opts.abuse || {})
+    this.abuse = new AbuseGuard({
+      config: abuseCfg,
+      isContact: (hex) => this._contactSet.has(hex),
+      isBlocked: (hex) => this.directory.isBlocked(hex),
+      log: this.opts.abuseLog
+    })
+    this.inbox.setGuard(this.abuse)
+    this.inbox.on('rejected', (info) => this._onRejected(info))
+
+    this.rpc = new RPC(this.outbox, this.inbox, {
+      isContact: (hex) => this._contactSet.has(hex)
+    })
     this.rpc.on('error', (err) => this.emit('error', err))
 
     this.attachments = new Attachments(this.store)
@@ -144,6 +168,11 @@ export class Agent extends EventEmitter {
         await this.directory.remove(card.pubkey).catch(() => {})
         continue
       }
+      // Cards stored before the manual-flag distinction existed: treat
+      // as manual (the only way they got there pre-change was either
+      // explicit add or gossip we already trusted enough to accept).
+      const treatAsManual = card.manual !== false
+      if (treatAsManual) this._contactSet.add(card.pubkey)
       await this.inbox.follow(card.pubkey).catch(() => {})
     }
 
@@ -170,6 +199,35 @@ export class Agent extends EventEmitter {
     try { await this.store.close() } catch {}
   }
 
+  // ---- abuse handling ----
+
+  // Fired by Inbox when an envelope is dropped (blocked/size/rate). We
+  // log via the guard's log; here we may auto-block and/or send a
+  // single rate-limit notice back to the peer.
+  async _onRejected (info) {
+    this.emit('rejected', info)
+    const hex = info.env?.from
+    if (!hex) return
+    if (info.autoBlocked) {
+      try {
+        await this.directory.block(hex)
+        this._contactSet.delete(hex)
+        await this.directory.remove(hex).catch(() => {})
+        await this.inbox.unfollow(hex).catch(() => {})
+      } catch (err) { this.emit('error', err) }
+      return
+    }
+    if (info.notify) {
+      // Best-effort one-shot notice. Don't await so we never block the
+      // drain loop on outbox.append. Failures are logged via the guard.
+      this.outbox.send({
+        to: hex,
+        type: 'chat',
+        body: { text: 'pearpost: rate limit exceeded; messages throttled', _rateLimitNotice: true }
+      }).catch(() => {})
+    }
+  }
+
   // ---- contacts ----
   async addContact (addressOrCard, alias) {
     const card = typeof addressOrCard === 'string'
@@ -181,6 +239,7 @@ export class Agent extends EventEmitter {
       throw new Error('contact is blocked: unblock first')
     }
     await this.directory.addManual(card)
+    this._contactSet.add(card.pubkey)
     await this.inbox.follow(card.pubkey)
     // Kick the swarm so the DHT lookup actually starts now. Without this,
     // the topic join we did inside follow() is lazy and the first send/
@@ -201,6 +260,7 @@ export class Agent extends EventEmitter {
     if (hex.startsWith('room:')) throw new Error('not a contact: ' + hex)
     if (block) await this.directory.block(hex)
     await this.directory.remove(hex)
+    this._contactSet.delete(hex)
     await this.inbox.unfollow(hex)
     return { pubkey: hex, blocked: !!block }
   }
@@ -247,8 +307,10 @@ export class Agent extends EventEmitter {
     return this.rpc.invoke(dest, name, args, opts)
   }
 
-  registerTool (name, handler) {
-    this.rpc.register(name, handler)
+  // Register a callable tool. By default tools are contacts-only — pass
+  // { public: true } to expose to strangers (still subject to rate limits).
+  registerTool (name, handler, opts = {}) {
+    this.rpc.register(name, handler, opts)
     const advertised = new Set(this.directory.profile.capabilities || [])
     advertised.add(name)
     this.directory.setProfile({ capabilities: [...advertised] })
@@ -357,6 +419,13 @@ export class Agent extends EventEmitter {
 
   async messages (opts) { return this.inbox.list(opts) }
   async thread (id) { return this.inbox.thread(id) }
+
+  // Quarantine view: messages from non-contacts (chat / tool.invoke) land
+  // here instead of the main inbox. Promote a peer to a contact (via
+  // addContact) to move future traffic into the main bucket.
+  async requests (opts = {}) {
+    return this.inbox.list({ ...opts, bucket: 'requests' })
+  }
 
   // ---- tasks ----
   async task (to, payload) {

@@ -21,9 +21,10 @@ Usage:
   pearpost chat <addr> <text...>        send a chat message
   pearpost send <addr> <type> <json>    send any envelope type with JSON body
   pearpost invoke <addr> <tool> <json>  call a remote tool (RPC)
-  pearpost serve <tool>                 register a built-in echo tool and stay up
-  pearpost tail                         stream live incoming messages
-  pearpost list [n]                     print last n messages (default 20)
+  pearpost serve <tool> [--public]      register a built-in echo tool and stay up
+  pearpost tail [--bucket=main|requests|all]   stream live incoming messages
+  pearpost list [n] [--bucket=...]      print last n messages (default 20)
+  pearpost requests [n]                 print pending messages from non-contacts
   pearpost room new [name]              create a room (prints serialized)
   pearpost room join <serialized>       join a room
   pearpost room send <id> <text...>     send chat to a joined room
@@ -116,25 +117,42 @@ async function run () {
     }
 
     case 'serve': {
-      const tool = rest[0] || 'echo'
-      agent.registerTool(tool, async (args, ctx) => {
-        console.log(`[tool ${tool}] from=${ctx.from.slice(0, 12)} args=${JSON.stringify(args)}`)
-        return { tool, args, at: Date.now() }
-      })
-      console.log(`serving tool "${tool}" as ${agent.address}`)
+      const args = rest.filter(a => !a.startsWith('--'))
+      const isPublic = rest.includes('--public')
+      const tool = args[0] || 'echo'
+      agent.registerTool(tool, async (toolArgs, ctx) => {
+        console.log(`[tool ${tool}] from=${ctx.from.slice(0, 12)} args=${JSON.stringify(toolArgs)}`)
+        return { tool, args: toolArgs, at: Date.now() }
+      }, { public: isPublic })
+      console.log(`serving tool "${tool}"${isPublic ? ' (public)' : ' (contacts-only)'} as ${agent.address}`)
       console.log('Ctrl+C to stop.')
       keepAlive()
       return
     }
 
     case 'tail': {
-      console.log('listening as', agent.address)
+      const bucket = bucketOpt(rest) || 'main'
+      console.log('listening as', agent.address, `(bucket=${bucket})`)
       console.log('commands:  :chat <addr> <text>   :send <addr> <type> <json>')
       console.log('           :invoke <addr> <tool> <json>   :room send <id> <text>')
-      console.log('           :contacts   :rooms   :quit')
-      agent.on('message', (rec) => printRecord(rec))
+      console.log('           :contacts   :rooms   :requests   :quit')
+      agent.on('message', (rec) => {
+        const recBucket = rec.bucket || 'main'
+        if (bucket !== 'all' && recBucket !== bucket) return
+        printRecord(rec)
+      })
+      agent.on('rejected', (info) => {
+        console.log(`[dropped] from=${info.env.from.slice(0,12)} type=${info.env.type} reason=${info.reason}${info.autoBlocked ? ' (auto-blocked)' : ''}`)
+      })
       startRepl(agent)
       return
+    }
+
+    case 'requests': {
+      const n = parseInt(rest[0] || '20', 10)
+      const msgs = await agent.requests({ limit: n, reverse: true })
+      for (const r of msgs.reverse()) printRecord(r)
+      return shutdown(agent)
     }
 
     case 'discover': {
@@ -147,8 +165,10 @@ async function run () {
     }
 
     case 'list': {
-      const n = parseInt(rest[0] || '20', 10)
-      const msgs = await agent.messages({ limit: n, reverse: true })
+      const positional = rest.filter(a => !a.startsWith('--'))
+      const n = parseInt(positional[0] || '20', 10)
+      const bucket = bucketOpt(rest) || 'main'
+      const msgs = await agent.messages({ limit: n, reverse: true, bucket })
       for (const r of msgs.reverse()) printRecord(r)
       return shutdown(agent)
     }
@@ -223,6 +243,13 @@ async function run () {
   }
 }
 
+function bucketOpt (rest) {
+  for (const a of rest) {
+    if (a.startsWith('--bucket=')) return a.slice('--bucket='.length)
+  }
+  return null
+}
+
 function printRecord (rec) {
   const { env, body } = rec
   const t = new Date(env.ts).toISOString().replace('T', ' ').slice(0, 19)
@@ -278,6 +305,9 @@ async function dispatch (agent, line) {
     console.log('  →', JSON.stringify(value))
   } else if (verb === 'contacts') {
     for (const c of await agent.contacts()) console.log('  ' + c.pubkey + '  ' + (c.alias || ''))
+  } else if (verb === 'requests') {
+    const msgs = await agent.requests({ limit: 50, reverse: true })
+    for (const r of msgs.reverse()) console.log('  ' + r.env.from.slice(0, 12) + '  ' + r.env.type + '  ' + JSON.stringify(r.body))
   } else if (verb === 'rooms') {
     for (const r of agent.rooms()) console.log('  ' + r.id + '  ' + (r.name || ''))
   } else if (verb === 'room') {

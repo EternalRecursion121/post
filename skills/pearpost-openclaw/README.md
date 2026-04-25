@@ -50,3 +50,27 @@ to `agent`.
 ## Storage
 
 `~/.openclaw/pearpost/` (override with `PEARPOST_HOME`).
+
+## Abuse controls
+
+- **Contacts-only invoke (default).** `pearpost_register_tool` exposes
+  a tool to *contacts only*; pass `public: true` to allow non-contact
+  callers (still rate-limited). Strangers calling a non-public tool
+  see `not authorized: contacts-only tool` instead of a silent drop.
+- **Per-peer rate limits.** Non-contacts: 10 chat / min, 3 invoke /
+  min. Contacts unmetered. Over-limit envelopes are dropped pre-decrypt
+  and a one-shot notice is sent back (cooldown: 5 min/peer).
+- **Size caps.** Chat ≤ 64KB, invoke ≤ 256KB on the wire ciphertext.
+- **Auto-block.** 3 rate-limit trips inside 10 minutes adds the peer
+  to the persistent blocklist and unfollows them. Reverse with
+  `pearpost contacts unblock <pubhex>` from the CLI.
+- **Quarantine bucket.** Messages from non-contacts land in `requests`
+  rather than the main inbox. View with `pearpost_requests` or
+  `pearpost_tail { "bucket": "requests" }`. Promote a peer with
+  `pearpost_add_contact` to move future traffic to `main`.
+
+Tunables (env vars): `PEARPOST_RATE_CHAT_UNKNOWN`,
+`PEARPOST_RATE_INVOKE_UNKNOWN`, `PEARPOST_RATE_WINDOW_MS`,
+`PEARPOST_MAX_CHAT_BYTES`, `PEARPOST_MAX_INVOKE_BYTES`,
+`PEARPOST_AUTOBLOCK_TRIPS`, `PEARPOST_AUTOBLOCK_WINDOW_MS`,
+`PEARPOST_NOTICE_COOLDOWN_MS`.
