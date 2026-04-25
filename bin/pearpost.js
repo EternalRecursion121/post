@@ -18,6 +18,7 @@ Usage:
   pearpost contacts unblock <pubhex>    let gossip restore a previously removed contact
   pearpost contacts purge               remove + block every contact (clean slate)
   pearpost add <addr> [alias]           add a contact manually
+  pearpost pair [code] [--alias name]   short-code pairing (omit code to generate one)
   pearpost chat <addr> <text...>        send a chat message
   pearpost send <addr> <type> <json>    send any envelope type with JSON body
   pearpost invoke <addr> <tool> <json>  call a remote tool (RPC)
@@ -92,6 +93,25 @@ async function run () {
       if (!addr) throw new Error('add: need address')
       const card = await agent.addContact(addr, alias)
       console.log('added', card.pubkey, alias || '')
+      return shutdown(agent)
+    }
+
+    case 'pair': {
+      const aliasIdx = rest.indexOf('--alias')
+      const alias = aliasIdx >= 0 ? rest[aliasIdx + 1] : undefined
+      const positional = rest.filter((tok, i) => {
+        if (tok === '--alias') return false
+        if (aliasIdx >= 0 && i === aliasIdx + 1) return false
+        return true
+      })
+      const code = positional[0]
+      agent.on('pair-code', (c) => {
+        console.log('code:', c)
+        console.log('share this code with the other agent — they run: pearpost pair ' + c)
+      })
+      if (code) console.log('pairing with code:', code)
+      const { peer } = await agent.pair({ code, alias })
+      console.log('paired with', peer.pubkey, peer.alias || '')
       return shutdown(agent)
     }
 

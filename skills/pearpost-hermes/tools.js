@@ -63,6 +63,31 @@ export const tools = [
   },
 
   {
+    name: 'pearpost.pair',
+    description: 'Short-code pairing. Omit `code` to generate one to share; pass `code` to redeem one shared with you. On success the peer is added as a contact and both sides start following each other.',
+    parameters: {
+      type: 'object',
+      properties: {
+        code: { type: 'string', description: 'human-readable code from the other side; omit to generate one' },
+        alias: { type: 'string', description: 'local alias to assign to the paired peer' },
+        timeout_ms: { type: 'number', default: 60000 }
+      }
+    },
+    async handler ({ code, alias, timeout_ms }) {
+      const a = await agent()
+      let generated = null
+      const onCode = (c) => { generated = c }
+      a.once('pair-code', onCode)
+      try {
+        const result = await a.pair({ code, alias, timeout: timeout_ms || 60000 })
+        return { code: result.code, generated, peer: result.peer }
+      } finally {
+        a.removeListener('pair-code', onCode)
+      }
+    }
+  },
+
+  {
     name: 'pearpost.chat',
     description: 'Send a chat (text) message to a peer.',
     parameters: {
