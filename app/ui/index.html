@@ -6,116 +6,68 @@
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <aside id="left">
-    <header>
-      <div class="logo">◆ pearpost</div>
-      <div class="me">
-        <div class="alias" id="me-alias">…</div>
-        <div class="addr" id="me-addr" title="click to copy"></div>
+  <div id="root">
+    <div id="top-strip">
+      <span class="logo">◆ PEARPOST</span>
+      <span class="me-alias" id="me-alias">…</span>
+      <span class="me-addr" id="me-addr" title="click to copy"></span>
+      <span class="me-caps" id="me-caps"></span>
+      <span class="spacer"></span>
+      <span class="dht" id="dht-status" title="DHT status">
+        <i class="dot"></i><span class="lbl">connecting…</span>
+      </span>
+      <span class="sep">┃</span>
+      <span class="clock" id="clock">--:--:-- UTC</span>
+      <span class="sep">┃</span>
+      <span class="tasks-pill" id="tasks-pill" title="active tasks">
+        TASKS <span class="n" id="tasks-n">0</span>
+      </span>
+    </div>
+
+    <aside id="left-rail">
+      <div class="section">
+        <div class="section-h">CONTACTS <span class="count" id="contacts-count">0</span></div>
+        <ul class="row-list" id="contacts"></ul>
       </div>
-    </header>
-
-    <section>
-      <h2>contacts</h2>
-      <ul id="contacts" class="list"></ul>
-      <form id="add-form">
-        <input id="add-addr" placeholder="pear+agent://…" />
-        <input id="add-alias" placeholder="alias" />
-        <button>add</button>
-      </form>
-    </section>
-
-    <section>
-      <h2>rooms</h2>
-      <ul id="rooms" class="list"></ul>
-      <form id="room-new-form">
-        <input id="room-new-name" placeholder="room name" />
-        <button>new</button>
-      </form>
-      <form id="room-join-form">
-        <input id="room-join-share" placeholder='paste serialized room JSON' />
-        <button>join</button>
-      </form>
-    </section>
-
-    <section>
-      <h2>tools</h2>
-      <ul id="capabilities" class="list muted"></ul>
-    </section>
-
-    <section>
-      <h2>tasks</h2>
-      <ul id="task-tray" class="list muted"></ul>
-    </section>
-  </aside>
-
-  <main id="middle">
-    <canvas id="graph"></canvas>
-    <div id="legend">
-      <span><i class="dot you"></i> you</span>
-      <span><i class="dot peer"></i> contact</span>
-      <span><i class="dot room"></i> room</span>
-      <span><i class="halo online"></i> online</span>
-      <span><i class="halo away"></i> away</span>
-      <span class="hint">click node = peer • click edge = chat • drag to move</span>
-    </div>
-  </main>
-
-  <aside id="right">
-    <div id="right-empty">
-      <p>Click a contact or edge to start a conversation, or right-click a contact to open its peer panel.</p>
-    </div>
-    <div id="right-thread" hidden>
-      <header>
-        <button id="back" class="back">←</button>
-        <div class="title">
-          <div class="t-with"><i id="thread-presence" class="presence unknown"></i><span id="thread-with-alias"></span></div>
-          <div class="t-addr" id="thread-with-addr"></div>
-        </div>
-      </header>
-      <div id="messages"></div>
-      <div id="reply-chip" class="reply-chip" hidden>
-        <span id="reply-chip-text"></span>
-        <button id="reply-chip-close" type="button">×</button>
+      <div class="section">
+        <div class="section-h">ROOMS <span class="count" id="rooms-count">0</span></div>
+        <ul class="row-list" id="rooms"></ul>
       </div>
-      <form id="composer">
-        <select id="composer-type">
-          <option value="chat">chat</option>
-          <option value="task.request">task.request</option>
-          <option value="tool.invoke">tool.invoke</option>
-        </select>
-        <input id="composer-text" placeholder="message…" autocomplete="off" />
-        <button>send</button>
-      </form>
+      <div class="section">
+        <div class="section-h">TASKS <span class="count" id="tasks-count">0</span></div>
+        <ul class="row-list" id="task-tray"></ul>
+      </div>
+    </aside>
+
+    <main id="main">
+      <canvas id="graph"></canvas>
+      <div id="graph-filters">
+        <button class="chip on chat"     data-filter="chat">chat</button>
+        <button class="chip on tool"     data-filter="tool">tool</button>
+        <button class="chip on task"     data-filter="task">task</button>
+        <button class="chip on presence" data-filter="presence">presence</button>
+      </div>
+      <div id="graph-legend">
+        <span class="you"><i class="swatch"></i>you</span>
+        <span class="peer"><i class="swatch"></i>peer</span>
+        <span class="room"><i class="swatch"></i>room</span>
+      </div>
+      <div id="edge-tooltip"></div>
+    </main>
+
+    <aside id="right-sheet"></aside>
+
+    <div id="hint-bar">
+      <span><span class="k">⌘K</span>command</span>
+      <span><span class="k">↵</span>open</span>
+      <span><span class="k">⇧↵</span>peer</span>
+      <span><span class="k">⌘↵</span>send</span>
+      <span><span class="k">R</span>reply</span>
+      <span><span class="k">Esc</span>back</span>
     </div>
-    <div id="right-peer" hidden>
-      <header>
-        <button class="back back-peer">←</button>
-        <div class="title">
-          <div class="t-with"><span id="peer-alias"></span></div>
-          <div class="t-addr" id="peer-addr"></div>
-        </div>
-      </header>
-      <p id="peer-blurb" class="blurb"></p>
-      <button id="peer-open-chat" class="primary-btn">open chat ↩</button>
-      <h3>tools advertised</h3>
-      <ul id="peer-tools" class="list muted"></ul>
-      <h3>invoke tool</h3>
-      <form id="peer-invoke-form">
-        <input id="peer-invoke-tool" placeholder="tool name" />
-        <input id="peer-invoke-args" placeholder='args JSON, e.g. {"x":1}' />
-        <button>invoke</button>
-      </form>
-      <h3>launch task</h3>
-      <form id="peer-task-form">
-        <input id="peer-task-title" placeholder="task title" />
-        <input id="peer-task-args" placeholder='args JSON, e.g. {"target":"x"}' />
-        <button>start</button>
-      </form>
-      <h3>presence</h3>
-      <ul id="peer-threads" class="list muted"></ul>
-    </div>
-  </aside>
+  </div>
+
+  <div id="toast-host"></div>
 
   <script type="module" src="/app.js"></script>
 </body>

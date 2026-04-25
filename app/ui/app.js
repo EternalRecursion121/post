@@ -1,5 +1,11 @@
-// PearPost UI — vanilla JS, talks to the local backend over fetch + SSE.
-// Three panes: contacts/rooms (left), agent graph (middle), thread/peer (right).
+// PearPost UI — radar console.
+//
+// Single source of truth: `state.view = { kind, target }`. The right sheet
+// renders exactly one of: empty, thread, peer. No `[hidden]` toggling.
+//
+// Talks to the local backend over fetch + SSE. Only chat is composed by
+// humans; tool/task envelopes are observed in the graph and thread but
+// never initiated from the UI.
 
 import { Graph } from '/graph.js'
 
@@ -8,295 +14,637 @@ const state = {
   records: [],
   presence: {},                  // pubHex -> { state, lastSeen }
   delivered: new Set(),          // env.id of envelopes confirmed delivered
-  tasks: new Map(),              // task root id -> { status, title, to, children:Set, parent }
-  selectedConversation: null,    // { kind: 'peer'|'room', other: id }
-  replyingTo: null               // env.id we're replying to (or null = no inReplyTo)
+  acked: new Set(),              // env.id of envelopes acked by recipient
+  tasks: new Map(),              // task root id -> { id, status, title, ... }
+  view: { kind: 'empty', target: null },
+  replyingTo: null,
+  replyToPreview: '',
+  filters: { chat: true, tool: true, task: true, presence: true },
+  unread: new Map(),             // pubHex/room-id -> count
+  swarmPeerCount: 0,
+  cmd: { open: false, query: '', active: 0, items: [] }
 }
 
-const els = {
-  meAlias: document.getElementById('me-alias'),
-  meAddr: document.getElementById('me-addr'),
-  contacts: document.getElementById('contacts'),
-  rooms: document.getElementById('rooms'),
-  capabilities: document.getElementById('capabilities'),
-  rightEmpty: document.getElementById('right-empty'),
-  rightThread: document.getElementById('right-thread'),
-  rightPeer: document.getElementById('right-peer'),
-  messages: document.getElementById('messages'),
-  threadWithAlias: document.getElementById('thread-with-alias'),
-  threadWithAddr: document.getElementById('thread-with-addr'),
-  threadPresence: document.getElementById('thread-presence'),
-  replyChip: document.getElementById('reply-chip'),
-  replyChipText: document.getElementById('reply-chip-text'),
-  replyChipClose: document.getElementById('reply-chip-close'),
-  peerAlias: document.getElementById('peer-alias'),
-  peerAddr: document.getElementById('peer-addr'),
-  peerBlurb: document.getElementById('peer-blurb'),
-  peerTools: document.getElementById('peer-tools'),
-  peerThreads: document.getElementById('peer-threads'),
-  peerOpenChat: document.getElementById('peer-open-chat'),
-  peerInvokeForm: document.getElementById('peer-invoke-form'),
-  peerInvokeTool: document.getElementById('peer-invoke-tool'),
-  peerInvokeArgs: document.getElementById('peer-invoke-args'),
-  peerTaskForm: document.getElementById('peer-task-form'),
-  peerTaskTitle: document.getElementById('peer-task-title'),
-  peerTaskArgs: document.getElementById('peer-task-args'),
-  composerType: document.getElementById('composer-type'),
-  composerText: document.getElementById('composer-text'),
-  composerAttach: document.getElementById('composer-attach'),
-  composer: document.getElementById('composer'),
-  back: document.getElementById('back'),
-  graph: document.getElementById('graph'),
-  taskTray: document.getElementById('task-tray')
-}
+function el (id) { return document.getElementById(id) }
 
-const graph = new Graph(els.graph, {
-  onNodeClick: (node) => openPeer(node.id),
-  onEdgeClick: (edge) => openConversation(edge),
+const graph = new Graph(el('graph'), {
+  onNodeClick: (n, ev) => {
+    if (ev && ev.shiftKey) openPeer(n.id)
+    else openThread(n.id)
+  },
+  onEdgeClick: (e) => openThread(e.a === state.me?.pubHex ? e.b : e.a),
+  onEdgeHover: (e, pos) => showEdgeTooltip(e, pos),
   isMe: (id) => state.me && id === state.me.pubHex,
+  isSelected: (id) => state.view.target === id,
   presenceFor: (id) => state.presence[id]?.state,
-  deliveredFor: (envId) => state.delivered.has(envId)
+  filters: state.filters
 })
 
-init().catch(err => console.error(err))
+init().catch(err => { console.error(err); toast('init error: ' + err.message) })
 
 async function init () {
   state.me = await fetch('/me').then(r => r.json())
-  els.meAlias.textContent = state.me.alias || '(you)'
-  els.meAddr.textContent = state.me.address
-  els.meAddr.onclick = () => navigator.clipboard.writeText(state.me.address)
-  state.presence = state.me.presence || {}
   for (const t of state.me.tasks || []) recordTask(t)
+  state.presence = state.me.presence || {}
 
   state.records = await fetch('/messages?limit=500').then(r => r.json())
+  for (const rec of state.records) {
+    if (rec.env.type === 'ack' && rec.body?.for) state.acked.add(rec.body.for)
+  }
   rebuildGraph()
-  renderContacts(); renderRooms(); renderCapabilities(); renderTaskTray()
+  renderTopStrip()
+  renderRail()
+  renderRightSheet()
+  startClock()
 
   const ev = new EventSource('/events')
   ev.onmessage = (e) => {
     const d = JSON.parse(e.data)
     if (d.kind === 'message') {
       state.records.push(d.record)
+      const env = d.record.env
+      if (env.type === 'ack' && d.record.body?.for) state.acked.add(d.record.body.for)
       pulse(d.record)
+      bumpUnread(d.record)
       rebuildGraph()
       maybeRenderThread()
-      renderTaskTray()
+      renderRail()
     } else if (d.kind === 'peer') {
       refreshMe()
     } else if (d.kind === 'presence') {
-      state.presence[d.presence.pubkey] = { state: d.presence.state, lastSeen: d.presence.ts }
+      state.presence[d.presence.pubkey] = { state: d.presence.state, lastSeen: d.presence.ts, capabilities: d.presence.capabilities || [] }
+      renderRail()
+      renderTopStrip()
       graph.requestRedraw()
     } else if (d.kind === 'delivered') {
       state.delivered.add(d.delivered.id)
       maybeRenderThread()
-      renderTaskTray()
     } else if (d.kind === 'task') {
       recordTask(d.task)
-      renderTaskTray()
+      renderRail()
       rebuildGraph()
     }
   }
 
-  document.getElementById('add-form').onsubmit = async (e) => {
-    e.preventDefault()
-    const address = document.getElementById('add-addr').value.trim()
-    const alias = document.getElementById('add-alias').value.trim()
-    if (!address) return
-    await fetch('/contacts/add', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ address, alias }) })
-    document.getElementById('add-addr').value = ''
-    document.getElementById('add-alias').value = ''
-    refreshMe()
+  // graph filter chips
+  for (const chip of document.querySelectorAll('#graph-filters .chip')) {
+    chip.onclick = () => {
+      const k = chip.dataset.filter
+      state.filters[k] = !state.filters[k]
+      chip.classList.toggle('on', state.filters[k])
+      graph.setFilters(state.filters)
+    }
   }
-  document.getElementById('room-new-form').onsubmit = async (e) => {
-    e.preventDefault()
-    const name = document.getElementById('room-new-name').value.trim()
-    const room = await fetch('/room/new', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name }) }).then(r => r.json())
-    document.getElementById('room-new-name').value = ''
-    await navigator.clipboard.writeText(room.share)
-    flash('room created — share copied to clipboard')
-    refreshMe()
+
+  // tasks pill: focus the rail
+  el('tasks-pill').onclick = () => {
+    el('task-tray').scrollIntoView({ block: 'start', behavior: 'smooth' })
   }
-  document.getElementById('room-join-form').onsubmit = async (e) => {
-    e.preventDefault()
-    const share = document.getElementById('room-join-share').value.trim()
-    if (!share) return
-    await fetch('/room/join', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ share }) })
-    document.getElementById('room-join-share').value = ''
-    refreshMe()
+  // me-addr copy
+  el('me-addr').onclick = () => {
+    if (!state.me) return
+    navigator.clipboard.writeText(state.me.address)
+    toast('address copied')
   }
-  els.composer.onsubmit = async (e) => {
-    e.preventDefault()
-    if (!state.selectedConversation) return
-    const text = els.composerText.value
-    if (!text && !els.composerAttach?.files?.length) return
-    const type = els.composerType.value
-    const inReplyTo = state.replyingTo
-    await sendInConversation(type, text, inReplyTo)
-    els.composerText.value = ''
-    if (els.composerAttach) els.composerAttach.value = ''
-    state.replyingTo = null
-    renderReplyChip()
-    els.composerText.focus()
-  }
-  els.replyChipClose.onclick = () => { state.replyingTo = null; renderReplyChip() }
-  els.back.onclick = closeRight
-  document.querySelectorAll('.back-peer').forEach(b => b.onclick = closeRight)
-  els.peerOpenChat.onclick = () => {
-    if (!state.selectedPeer) return
-    openConversationWithPeer(state.selectedPeer)
-  }
-  els.peerInvokeForm.onsubmit = async (e) => {
-    e.preventDefault()
-    if (!state.selectedPeer) return
-    const tool = els.peerInvokeTool.value.trim()
-    if (!tool) return
-    let args = {}
-    try { args = els.peerInvokeArgs.value.trim() ? JSON.parse(els.peerInvokeArgs.value) : {} } catch (err) { return flash('args must be JSON') }
-    flash(`invoking ${tool}…`)
-    const r = await fetch('/invoke', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ to: state.selectedPeer, tool, args }) }).then(r => r.json()).catch(e => ({ error: e.message }))
-    flash(r.error ? `error: ${r.error}` : `→ ${JSON.stringify(r.value).slice(0, 80)}`)
-  }
-  els.peerTaskForm.onsubmit = async (e) => {
-    e.preventDefault()
-    if (!state.selectedPeer) return
-    const title = els.peerTaskTitle.value.trim()
-    if (!title) return
-    let args = {}
-    try { args = els.peerTaskArgs.value.trim() ? JSON.parse(els.peerTaskArgs.value) : {} } catch (err) { return flash('args must be JSON') }
-    flash(`task "${title}" launched`)
-    fetch('/task', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ to: state.selectedPeer, title, args }) }).then(r => r.json()).then(r => {
-      flash(r.ok ? `task done: ${JSON.stringify(r.value).slice(0, 60)}` : `task error: ${r.error}`)
-    })
-    els.peerTaskTitle.value = ''
-    els.peerTaskArgs.value = ''
-  }
+
+  document.addEventListener('keydown', onGlobalKey)
 }
 
 async function refreshMe () {
   state.me = await fetch('/me').then(r => r.json())
-  state.presence = { ...state.presence, ...(state.me.presence || {}) }
   for (const t of state.me.tasks || []) recordTask(t)
-  renderContacts(); renderRooms(); renderCapabilities(); renderTaskTray()
+  state.presence = { ...state.presence, ...(state.me.presence || {}) }
+  renderTopStrip()
+  renderRail()
   rebuildGraph()
 }
 
-function renderContacts () {
-  els.contacts.innerHTML = ''
+// ---------- top strip ----------
+
+function renderTopStrip () {
+  if (!state.me) return
+  el('me-alias').textContent = state.me.alias || '(you)'
+  el('me-addr').textContent = truncAddr(state.me.address)
+  el('me-addr').title = state.me.address + '\nclick to copy'
+  const caps = (state.me.capabilities || []).slice(0, 4)
+  el('me-caps').innerHTML = caps.length ? `<b>caps:</b> ${caps.map(esc).join(' · ')}` : ''
+  // dht status from presence map (any online peers ⇒ ok)
+  const onlinePeers = Object.values(state.presence).filter(p => p.state === 'online').length
+  state.swarmPeerCount = onlinePeers
+  const dht = el('dht-status')
+  dht.classList.remove('ok', 'warn')
+  if (onlinePeers >= 1) { dht.classList.add('ok'); dht.querySelector('.lbl').textContent = `DHT · ${onlinePeers} online` }
+  else if ((state.me.contacts || []).length) { dht.classList.add('warn'); dht.querySelector('.lbl').textContent = 'DHT · 0 online' }
+  else { dht.querySelector('.lbl').textContent = 'DHT · idle' }
+
+  // task counter
+  const active = [...state.tasks.values()].filter(t => t.status === 'progress' || t.status === 'pending' || t.status === 'accepted').length
+  el('tasks-n').textContent = active
+}
+
+function startClock () {
+  const tick = () => {
+    const d = new Date()
+    const hh = String(d.getUTCHours()).padStart(2, '0')
+    const mm = String(d.getUTCMinutes()).padStart(2, '0')
+    const ss = String(d.getUTCSeconds()).padStart(2, '0')
+    el('clock').textContent = `${hh}:${mm}:${ss} UTC`
+  }
+  tick(); setInterval(tick, 1000)
+}
+
+// ---------- left rail ----------
+
+function renderRail () {
+  if (!state.me) return
+  // contacts
+  const contactsEl = el('contacts'); contactsEl.innerHTML = ''
+  el('contacts-count').textContent = state.me.contacts.length
   for (const c of state.me.contacts) {
+    const presence = state.presence[c.pubkey]?.state || 'unknown'
     const li = document.createElement('li')
-    const stateClass = state.presence[c.pubkey]?.state || 'unknown'
-    li.innerHTML = `<i class="presence ${stateClass}"></i><span class="name">${esc(c.alias || '(unnamed)')}</span><span class="addr">${c.pubkey.slice(0,10)}…</span>`
-    li.onclick = () => openConversationWithPeer(c.pubkey)
+    li.className = 'row contact' + (state.view.target === c.pubkey ? ' selected' : '')
+    li.innerHTML = `
+      <i class="pres ${presence}" title="${presence}"></i>
+      <span class="name">${esc(c.alias || '(unnamed)')}</span>
+      <span class="addr">${esc(short(c.pubkey))}</span>
+    `
+    const u = state.unread.get(c.pubkey) || 0
+    if (u > 0) {
+      const b = document.createElement('span'); b.className = 'badge'; b.textContent = u
+      li.querySelector('.addr').replaceWith(b)
+    }
+    li.title = `${c.alias || '(unnamed)'} — ${c.pubkey}\nclick: open chat • shift-click / right-click: peer panel`
+    li.onclick = (e) => e.shiftKey ? openPeer(c.pubkey) : openThread(c.pubkey)
     li.oncontextmenu = (e) => { e.preventDefault(); openPeer(c.pubkey) }
-    li.title = 'click: chat • right-click: peer panel'
-    els.contacts.appendChild(li)
+    contactsEl.appendChild(li)
   }
-}
 
-function renderRooms () {
-  els.rooms.innerHTML = ''
+  // rooms
+  const roomsEl = el('rooms'); roomsEl.innerHTML = ''
+  el('rooms-count').textContent = state.me.rooms.length
   for (const r of state.me.rooms) {
+    const target = 'room:' + r.id
     const li = document.createElement('li')
-    li.innerHTML = `<span class="name">${esc(r.name || '(unnamed)')}</span><span class="addr">${r.id.slice(0,10)}…</span>`
-    li.onclick = () => openConversation({ a: state.me.pubHex, b: 'room:' + r.id })
-    li.oncontextmenu = (e) => { e.preventDefault(); navigator.clipboard.writeText(r.share); flash('share copied') }
-    li.title = 'click: open room • right-click: copy share-link'
-    els.rooms.appendChild(li)
-  }
-}
-
-function renderCapabilities () {
-  els.capabilities.innerHTML = ''
-  for (const c of state.me.capabilities || []) {
-    const li = document.createElement('li')
-    li.textContent = c
-    els.capabilities.appendChild(li)
-  }
-  if (!els.capabilities.childElementCount) {
-    const li = document.createElement('li')
-    li.textContent = '(none registered)'
-    els.capabilities.appendChild(li)
-  }
-}
-
-function recordTask (t) {
-  if (!t || !t.id) return
-  const prev = state.tasks.get(t.id) || { children: new Set() }
-  const next = {
-    id: t.id,
-    status: t.status || prev.status,
-    title: t.title || prev.title,
-    to: t.to || prev.to,
-    body: t.body || prev.body,
-    parent: t.parent ?? prev.parent,
-    children: new Set(t.children || prev.children || [])
-  }
-  state.tasks.set(t.id, next)
-  if (next.parent && state.tasks.has(next.parent)) {
-    state.tasks.get(next.parent).children.add(next.id)
-  }
-}
-
-function renderTaskTray () {
-  if (!els.taskTray) return
-  // Reconstruct task tree from envelopes too — task.request / task.result
-  // pairs we've materialised in the inbox.
-  for (const r of state.records) {
-    if (r.env.type === 'task.request' && !state.tasks.has(r.env.id)) {
-      state.tasks.set(r.env.id, {
-        id: r.env.id,
-        status: 'pending',
-        title: r.body?.title || '(untitled)',
-        to: r.env.to,
-        from: r.env.from,
-        parent: r.env.inReplyTo || null,
-        children: new Set()
-      })
+    li.className = 'row room' + (state.view.target === target ? ' selected' : '')
+    const u = state.unread.get(target) || 0
+    li.innerHTML = `
+      <i class="pres" title="room"></i>
+      <span class="name">${esc(r.name || '(unnamed)')}</span>
+      <span class="addr">${esc(short(r.id))}</span>
+    `
+    if (u > 0) {
+      const b = document.createElement('span'); b.className = 'badge'; b.textContent = u
+      li.querySelector('.addr').replaceWith(b)
     }
-    if (r.env.type === 'task.result' && r.env.inReplyTo) {
-      const t = state.tasks.get(r.env.inReplyTo)
-      if (t) { t.status = r.body?.status || 'progress'; t.last = r.body }
-    }
+    li.title = `${r.name || '(unnamed)'} — ${r.id}\nclick: open • right-click: copy share-link`
+    li.onclick = () => openThread(target)
+    li.oncontextmenu = (e) => { e.preventDefault(); navigator.clipboard.writeText(r.share); toast('share copied') }
+    roomsEl.appendChild(li)
   }
 
-  // Top-level only.
+  // tasks
+  const trayEl = el('task-tray'); trayEl.innerHTML = ''
+  // top-level tasks
+  syncTasksFromRecords()
   const roots = [...state.tasks.values()].filter(t => !t.parent || !state.tasks.has(t.parent))
-  els.taskTray.innerHTML = ''
+  el('tasks-count').textContent = state.tasks.size
   if (!roots.length) {
-    els.taskTray.innerHTML = '<li class="muted">(no tasks)</li>'
-    return
+    const li = document.createElement('li')
+    li.style.cssText = 'color:var(--text-muted);padding:4px 12px;font-size:11px;cursor:default;display:block'
+    li.textContent = '— none —'
+    trayEl.appendChild(li)
+  } else {
+    for (const t of roots) renderTaskBranch(trayEl, t, 0)
   }
-  for (const t of roots) els.taskTray.appendChild(renderTaskNode(t, 0))
+  renderTopStrip()
 }
 
-function renderTaskNode (t, depth) {
+function renderTaskBranch (parent, t, depth) {
   const li = document.createElement('li')
-  li.className = 'task-node depth-' + Math.min(depth, 4) + ' status-' + (t.status || 'pending')
+  li.className = `task-row depth-${Math.min(depth,3)} status-${t.status || 'pending'}`
   const dest = (t.to || '').slice(0, 8)
-  li.innerHTML = `<span class="status-pill"></span><span class="title">${esc(t.title || '(no-title)')}</span><span class="dest">→${dest}…</span><span class="status-text">${esc(t.status || '…')}</span>`
-  for (const childId of t.children) {
-    const child = state.tasks.get(childId)
-    if (child) li.appendChild(renderTaskNode(child, depth + 1))
+  const elapsed = t.createdAt ? formatElapsed(Date.now() - t.createdAt) : ''
+  li.innerHTML = `
+    <i class="pill"></i>
+    <span class="title">${esc(t.title || '(no-title)')}</span>
+    <span class="dest">→${esc(dest)}…</span>
+    <span class="elapsed">${esc(elapsed)}</span>
+  `
+  if (t.to) li.onclick = () => openThread(t.to)
+  parent.appendChild(li)
+  for (const cid of t.children || []) {
+    const child = state.tasks.get(cid)
+    if (child) renderTaskBranch(parent, child, depth + 1)
   }
-  return li
 }
 
-// Build nodes + edges out of records and feed the graph.
+// ---------- right sheet ----------
+
+function renderRightSheet () {
+  const sheet = el('right-sheet')
+  sheet.innerHTML = ''
+  let view
+  if (state.view.kind === 'thread') view = renderThreadView(state.view.target)
+  else if (state.view.kind === 'peer') view = renderPeerView(state.view.target)
+  else view = renderEmptyView()
+  view.classList.add('sheet-view')
+  sheet.appendChild(view)
+}
+
+function renderEmptyView () {
+  const wrap = document.createElement('div')
+  wrap.className = 'empty-view'
+  wrap.innerHTML = `
+    <div class="lede"><b>idle.</b> no thread selected.</div>
+    <div class="quick" data-q="add">
+      <span class="label">add a contact</span>
+      <span class="kbd">⌘K · /add</span>
+    </div>
+    <div class="quick" data-q="room">
+      <span class="label">create a room</span>
+      <span class="kbd">⌘K · /room</span>
+    </div>
+    <div class="quick" data-q="copy">
+      <span class="label">copy your address</span>
+      <span class="kbd">click ◆ above</span>
+    </div>
+  `
+  wrap.querySelector('[data-q="add"]').onclick = () => openPalette('/add ')
+  wrap.querySelector('[data-q="room"]').onclick = () => openPalette('/room ')
+  wrap.querySelector('[data-q="copy"]').onclick = () => {
+    if (!state.me) return
+    navigator.clipboard.writeText(state.me.address); toast('address copied')
+  }
+  return wrap
+}
+
+function renderThreadView (target) {
+  const wrap = document.createElement('div')
+  const isRoom = target.startsWith('room:')
+  const presence = isRoom ? 'room' : (state.presence[target]?.state || 'unknown')
+  const aliasFor = isRoom
+    ? labelForRoom(target.slice(5))
+    : (state.me.contacts.find(c => c.pubkey === target)?.alias || short(target))
+
+  // header
+  const header = document.createElement('div')
+  header.className = 'sheet-h'
+  header.innerHTML = `
+    <button class="back" title="close">◀</button>
+    <i class="pres ${presence}"></i>
+    <span class="alias">${esc(aliasFor)}</span>
+    <button class="menu" title="more">⋯</button>
+    <span class="addr" title="click to copy">${esc(target)}</span>
+  `
+  header.querySelector('.back').onclick = closeRight
+  header.querySelector('.addr').onclick = () => { navigator.clipboard.writeText(target); toast('copied') }
+  header.querySelector('.menu').onclick = () => isRoom ? toast('room: ' + target) : openPeer(target)
+  wrap.appendChild(header)
+
+  // messages
+  const msgs = document.createElement('div')
+  msgs.className = 'thread-msgs'
+  msgs.id = 'thread-msgs'
+  wrap.appendChild(msgs)
+
+  fillThread(msgs, target)
+
+  // reply chip (conditional)
+  if (state.replyingTo) {
+    const chip = document.createElement('div')
+    chip.className = 'reply-chip'
+    chip.innerHTML = `
+      <span class="preview">↩ ${esc(state.replyToPreview || state.replyingTo.slice(0, 12))}</span>
+      <button class="x" title="cancel">×</button>
+    `
+    chip.querySelector('.x').onclick = () => { state.replyingTo = null; renderRightSheet() }
+    wrap.appendChild(chip)
+  }
+
+  // composer
+  const comp = document.createElement('form')
+  comp.className = 'composer'
+  comp.innerHTML = `
+    <span class="stripe"></span>
+    <textarea placeholder="message…  ⌘↵ to send" rows="1" autocomplete="off"></textarea>
+    <button class="send" type="submit">SEND <span class="kbd">⌘↵</span></button>
+  `
+  const ta = comp.querySelector('textarea')
+  ta.addEventListener('focus', () => comp.classList.add('focused'))
+  ta.addEventListener('blur', () => comp.classList.remove('focused'))
+  ta.addEventListener('input', () => {
+    ta.style.height = 'auto'
+    ta.style.height = Math.min(110, ta.scrollHeight) + 'px'
+  })
+  ta.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault()
+      comp.requestSubmit()
+    }
+  })
+  comp.onsubmit = async (e) => {
+    e.preventDefault()
+    const text = ta.value.trim()
+    if (!text) return
+    const inReplyTo = state.replyingTo
+    await sendChat(target, text, inReplyTo)
+    ta.value = ''
+    ta.style.height = 'auto'
+    state.replyingTo = null
+    renderRightSheet()
+    setTimeout(() => {
+      const tm = el('thread-msgs')
+      if (tm) tm.scrollTop = tm.scrollHeight
+    }, 0)
+  }
+  // drag-and-drop overlay
+  const drop = document.createElement('div')
+  drop.className = 'drop-overlay'
+  drop.textContent = 'drop to attach (cli only for now)'
+  drop.hidden = true
+  wrap.appendChild(comp)
+  wrap.appendChild(drop)
+  wrap.addEventListener('dragenter', (e) => { e.preventDefault(); drop.hidden = false })
+  wrap.addEventListener('dragleave', (e) => { if (e.target === wrap) drop.hidden = true })
+  wrap.addEventListener('dragover', (e) => e.preventDefault())
+  wrap.addEventListener('drop', (e) => {
+    e.preventDefault(); drop.hidden = true
+    if (e.dataTransfer?.files?.length) toast('attachments via browser not yet supported (use CLI)')
+  })
+
+  // focus composer after render
+  setTimeout(() => ta.focus(), 0)
+
+  // clear unread on this view
+  state.unread.delete(target)
+  return wrap
+}
+
+function fillThread (host, target) {
+  host.innerHTML = ''
+  const recs = state.records
+    .filter(r => onConversation(r.env, target))
+    .sort((a, b) => a.env.ts - b.env.ts)
+
+  const consumed = new Set()
+  for (const rec of recs) {
+    if (consumed.has(rec.env.id)) continue
+    const e = rec.env
+    if (e.type === 'tool.invoke') {
+      const reply = recs.find(x => x.env.inReplyTo === e.id && x.env.type === 'tool.result')
+      if (reply) consumed.add(reply.env.id)
+      host.appendChild(renderToolPair(rec, reply))
+    } else if (e.type === 'tool.result' && e.inReplyTo && recs.find(x => x.env.id === e.inReplyTo)) {
+      continue
+    } else if (e.type === 'task.request') {
+      const updates = recs.filter(x => x.env.inReplyTo === e.id && x.env.type === 'task.result')
+      for (const u of updates) consumed.add(u.env.id)
+      host.appendChild(renderTaskPair(rec, updates))
+    } else if (e.type === 'task.result' && e.inReplyTo && recs.find(x => x.env.id === e.inReplyTo)) {
+      continue
+    } else if (e.type === 'ack' || e.type === 'presence') {
+      continue
+    } else {
+      host.appendChild(renderMessage(rec))
+    }
+  }
+  // scroll to bottom
+  setTimeout(() => { host.scrollTop = host.scrollHeight }, 0)
+}
+
+function renderMessage (rec) {
+  const div = document.createElement('div')
+  const mine = isMine(rec.env)
+  div.className = 'msg ' + (mine ? 'me' : 'them')
+  div.dataset.id = rec.env.id
+  const t = formatTime(rec.env.ts)
+
+  let body
+  if (rec.env.type === 'chat') body = `<pre>${esc(rec.body.text || '')}</pre>`
+  else body = `<pre>${esc(JSON.stringify(rec.body, null, 2))}</pre>`
+
+  let attach = ''
+  if (rec.env.attach?.length) {
+    attach = '<div class="attach">'
+    for (const it of rec.env.attach) {
+      attach += `<a class="attach-link" href="/attach?key=${encodeURIComponent(it.key)}&name=${encodeURIComponent(it.name)}" download="${esc(it.name)}"><span class="clip">📎</span> <span>${esc(it.name)}</span> <span class="size">${formatSize(it.size)}</span></a>`
+    }
+    attach += '</div>'
+  }
+
+  const tickHtml = mine ? renderTick(rec.env.id) : ''
+  const replyBtn = mine ? '' : `<button class="reply-btn" title="reply">↩</button>`
+
+  div.innerHTML = `
+    <div class="meta">
+      <span class="type">${esc(rec.env.type)}</span>
+      <span class="ts">${t}</span>
+      ${tickHtml}
+    </div>
+    ${body}
+    ${attach}
+    <div class="actions">${replyBtn}</div>`
+  div.querySelector('.reply-btn')?.addEventListener('click', () => {
+    state.replyingTo = rec.env.id
+    state.replyToPreview = rec.body?.text?.slice(0, 60) || rec.env.type
+    renderRightSheet()
+  })
+  return div
+}
+
+function renderTick (envId) {
+  if (state.acked.has(envId)) return `<span class="tick ok" title="acked by recipient">✓✓</span>`
+  if (state.delivered.has(envId)) return `<span class="tick ok" title="delivered">✓</span>`
+  return `<span class="tick" title="pending"><span class="spinner"></span></span>`
+}
+
+function renderToolPair (req, res) {
+  const div = document.createElement('div')
+  div.className = 'msg tool ' + (isMine(req.env) ? 'me' : 'them')
+  const t = formatTime(req.env.ts)
+  const reqBody = `${esc(req.body.name)}(${esc(JSON.stringify(req.body.args || {}))})`
+  let resBody
+  if (!res) resBody = `<div class="res pending">awaiting…</div>`
+  else if (res.body.ok) resBody = `<div class="res ok">→ ${esc(JSON.stringify(res.body.value))}</div>`
+  else resBody = `<div class="res err">! ${esc(res.body.error || 'error')}</div>`
+  div.innerHTML = `
+    <div class="meta"><span class="type">tool</span><span class="ts">${t}</span></div>
+    <div class="pair">
+      <div class="req">${reqBody}</div>
+      ${resBody}
+    </div>`
+  return div
+}
+
+function renderTaskPair (req, updates) {
+  const div = document.createElement('div')
+  div.className = 'msg task ' + (isMine(req.env) ? 'me' : 'them')
+  const t = formatTime(req.env.ts)
+  const last = updates[updates.length - 1]
+  const status = last?.body?.status || 'pending'
+  const progress = updates.filter(u => u.body?.status === 'progress')
+  const updHtml = progress.map(u => `<div class="task-progress">→ ${esc(u.body.note || '')}<span class="pct">${Math.round((u.body.progress || 0) * 100)}%</span></div>`).join('')
+  let resHtml
+  if (status === 'done')      resHtml = `<div class="res ok">✔ ${esc(JSON.stringify(last.body.value || {}))}</div>`
+  else if (status === 'error') resHtml = `<div class="res err">! ${esc(last.body.error || 'error')}</div>`
+  else                         resHtml = `<div class="res pending">${esc(status)}…</div>`
+  div.innerHTML = `
+    <div class="meta"><span class="type">task</span><span class="ts">${t}</span></div>
+    <div class="pair">
+      <div class="req">${esc(req.body.title || '(no-title)')} ${esc(JSON.stringify(req.body.args || {}))}</div>
+      ${updHtml}
+      ${resHtml}
+    </div>`
+  return div
+}
+
+// peer panel — read-only
+function renderPeerView (target) {
+  const wrap = document.createElement('div')
+  const c = state.me.contacts.find(x => x.pubkey === target) || { pubkey: target, alias: '', blurb: '', capabilities: [] }
+  const presence = state.presence[target] || {}
+  const presClass = presence.state || 'unknown'
+  const lastSeen = presence.lastSeen ? new Date(presence.lastSeen).toLocaleTimeString() : '—'
+  const caps = (c.capabilities || presence.capabilities || [])
+
+  const header = document.createElement('div')
+  header.className = 'sheet-h'
+  header.innerHTML = `
+    <button class="back" title="close">◀</button>
+    <i class="pres ${presClass}"></i>
+    <span class="alias">${esc(c.alias || short(target))}</span>
+    <button class="menu" title="more">⋯</button>
+    <span class="addr" title="click to copy">${esc(target)}</span>
+  `
+  header.querySelector('.back').onclick = closeRight
+  header.querySelector('.addr').onclick = () => { navigator.clipboard.writeText(target); toast('copied') }
+  header.querySelector('.menu').onclick = () => toast('peer: ' + short(target))
+  wrap.appendChild(header)
+
+  const body = document.createElement('div')
+  body.className = 'peer-view'
+
+  // open chat CTA
+  const cta = document.createElement('button')
+  cta.className = 'open-chat'
+  cta.innerHTML = `▶ open chat`
+  cta.onclick = () => openThread(target)
+  body.appendChild(cta)
+
+  // presence
+  body.appendChild(block('PRESENCE', `
+    <div class="pres-line">
+      <i class="pres ${presClass}"></i>
+      <span class="v">${esc(presClass)}</span>
+      <span class="seen">· last seen ${esc(lastSeen)}</span>
+    </div>
+  `))
+
+  // caps
+  body.appendChild(block('CAPABILITIES (advertised)', caps.length
+    ? `<div class="caps">${caps.map(cap => `<span class="cap">${esc(cap)}</span>`).join('')}</div>`
+    : `<div class="v" style="color:var(--text-muted)">— none advertised —</div>`
+  ))
+
+  // blurb
+  if (c.blurb) body.appendChild(block('BLURB', `<div class="blurb">"${esc(c.blurb)}"</div>`))
+
+  // thread summary
+  const threadCount = state.records.filter(r => onConversation(r.env, target) && r.env.type !== 'ack' && r.env.type !== 'presence').length
+  const last = [...state.records].reverse().find(r => onConversation(r.env, target) && r.env.type !== 'ack' && r.env.type !== 'presence')
+  const lastTxt = last ? formatTime(last.env.ts) : '—'
+  const summary = document.createElement('div')
+  summary.className = 'thread-summary'
+  summary.innerHTML = `${threadCount} message${threadCount === 1 ? '' : 's'} · last ${lastTxt}<br><span style="color:var(--text-muted);font-size:10px">click to open</span>`
+  summary.onclick = () => openThread(target)
+  body.appendChild(block('THREAD', summary))
+
+  wrap.appendChild(body)
+  return wrap
+}
+
+function block (heading, contentHtmlOrNode) {
+  const div = document.createElement('div')
+  div.className = 'block'
+  div.innerHTML = `<div class="h">${esc(heading)}</div>`
+  const v = document.createElement('div')
+  if (typeof contentHtmlOrNode === 'string') v.innerHTML = contentHtmlOrNode
+  else v.appendChild(contentHtmlOrNode)
+  div.appendChild(v)
+  return div
+}
+
+// ---------- view transitions ----------
+
+function openThread (target) {
+  if (!target) return
+  state.view = { kind: 'thread', target }
+  state.unread.delete(target)
+  renderRightSheet()
+  renderRail()
+  graph.requestRedraw()
+}
+function openPeer (target) {
+  if (!target) return
+  if (target.startsWith('room:')) return openThread(target)
+  state.view = { kind: 'peer', target }
+  renderRightSheet()
+  renderRail()
+  graph.requestRedraw()
+}
+function closeRight () {
+  state.view = { kind: 'empty', target: null }
+  state.replyingTo = null
+  renderRightSheet()
+  renderRail()
+  graph.requestRedraw()
+}
+function maybeRenderThread () {
+  if (state.view.kind !== 'thread') return
+  const host = el('thread-msgs')
+  if (!host) return
+  fillThread(host, state.view.target)
+}
+
+// ---------- send ----------
+
+async function sendChat (target, text, inReplyTo) {
+  if (target.startsWith('room:')) {
+    const id = target.slice(5)
+    return fetch('/room/send', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ id, type: 'chat', body: { text } })
+    })
+  }
+  return fetch('/send', {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ to: target, type: 'chat', body: { text }, inReplyTo: inReplyTo || null })
+  })
+}
+
+// ---------- graph ----------
+
 function rebuildGraph () {
   const nodes = new Map()
   const edges = new Map()
+  if (!state.me) return
 
   nodes.set(state.me.pubHex, { id: state.me.pubHex, label: state.me.alias || 'me', kind: 'you' })
   for (const c of state.me.contacts) {
-    if (!nodes.has(c.pubkey)) nodes.set(c.pubkey, { id: c.pubkey, label: c.alias || c.pubkey.slice(0,8), kind: 'peer' })
+    if (!nodes.has(c.pubkey)) nodes.set(c.pubkey, { id: c.pubkey, label: c.alias || short(c.pubkey), kind: 'peer' })
   }
   for (const r of state.me.rooms) {
-    nodes.set('room:' + r.id, { id: 'room:' + r.id, label: r.name || ('room ' + r.id.slice(0,6)), kind: 'room' })
+    nodes.set('room:' + r.id, { id: 'room:' + r.id, label: r.name || ('room ' + r.id.slice(0, 6)), kind: 'room' })
+    // membership edge to self so rooms aren't floating disconnected
+    const a = state.me.pubHex, b = 'room:' + r.id
+    const k = a + '|' + b
+    if (!edges.has(k)) edges.set(k, { a, b, count: 0, lastTs: 0, types: new Set(), recentTaskFan: 0, membership: true })
   }
 
   for (const rec of state.records) {
     const e = rec.env
-    if (!nodes.has(e.from)) nodes.set(e.from, { id: e.from, label: e.from.slice(0,8), kind: 'peer' })
+    if (!nodes.has(e.from)) nodes.set(e.from, { id: e.from, label: short(e.from), kind: 'peer' })
 
     if (e.to && /^[0-9a-f]{64}$/i.test(e.to)) {
       const a = e.from, b = e.to
@@ -307,7 +655,7 @@ function rebuildGraph () {
       edge.types.add(e.type)
       if (e.type === 'task.request' || e.type === 'task.result') edge.recentTaskFan = Math.max(edge.recentTaskFan, e.ts)
       edges.set(key, edge)
-      if (!nodes.has(b)) nodes.set(b, { id: b, label: b.slice(0,8), kind: 'peer' })
+      if (!nodes.has(b)) nodes.set(b, { id: b, label: short(b), kind: 'peer' })
     } else if (e.to && e.to.startsWith('room:')) {
       const a = e.from, b = e.to
       const key = a + '|' + b
@@ -320,7 +668,10 @@ function rebuildGraph () {
   }
 
   graph.update([...nodes.values()], [...edges.values()].map(e => ({
-    a: e.a, b: e.b, count: e.count, lastTs: e.lastTs, types: [...e.types], recentTaskFan: e.recentTaskFan
+    a: e.a, b: e.b, count: e.count, lastTs: e.lastTs,
+    types: [...(e.types || [])],
+    recentTaskFan: e.recentTaskFan,
+    membership: !!e.membership
   })))
 }
 
@@ -329,256 +680,314 @@ function pulse (rec) {
   graph.pulse(e.from, e.to, { type: e.type })
 }
 
-function openConversationWithPeer (pubHex) {
-  return openConversation({ a: state.me.pubHex, b: pubHex })
+function showEdgeTooltip (edge, pos) {
+  const tip = el('edge-tooltip')
+  if (!edge) { tip.classList.remove('show'); return }
+  const last = edge.lastTs ? formatTime(edge.lastTs) : '—'
+  const types = (edge.types || []).filter(t => t !== 'ack' && t !== 'presence').join(' · ') || '—'
+  tip.textContent = `${edge.count || 0} msgs · last ${last} · ${types}`
+  tip.style.left = (pos.x + 12) + 'px'
+  tip.style.top  = (pos.y + 12) + 'px'
+  tip.classList.add('show')
 }
 
-function openConversation (edge) {
-  const otherId = edge.a === state.me.pubHex ? edge.b : edge.a
-  state.selectedConversation = { kind: otherId.startsWith('room:') ? 'room' : 'peer', other: otherId }
-  state.replyingTo = null
-  els.rightEmpty.hidden = true
-  els.rightPeer.hidden = true
-  els.rightThread.hidden = false
-  const otherIsRoom = otherId.startsWith('room:')
-  els.threadWithAlias.textContent = otherIsRoom
-    ? labelForRoom(otherId.slice(5))
-    : (state.me.contacts.find(c => c.pubkey === otherId)?.alias || otherId.slice(0,12))
-  els.threadWithAddr.textContent = otherId
-  if (els.threadPresence) {
-    els.threadPresence.className = 'presence ' + (otherIsRoom ? 'room' : (state.presence[otherId]?.state || 'unknown'))
+function bumpUnread (rec) {
+  const e = rec.env
+  if (e.from === state.me?.pubHex) return
+  if (e.type === 'ack' || e.type === 'presence') return
+  const target = e.to?.startsWith('room:') ? e.to : e.from
+  if (state.view.kind === 'thread' && state.view.target === target) return
+  state.unread.set(target, (state.unread.get(target) || 0) + 1)
+}
+
+// ---------- tasks ----------
+
+function recordTask (t) {
+  if (!t || !t.id) return
+  const prev = state.tasks.get(t.id) || { children: new Set(), createdAt: Date.now() }
+  const next = {
+    id: t.id,
+    status: t.status || prev.status || 'pending',
+    title: t.title || prev.title,
+    to: t.to || prev.to,
+    body: t.body || prev.body,
+    parent: t.parent ?? prev.parent,
+    createdAt: prev.createdAt || Date.now(),
+    children: new Set([...(prev.children || []), ...(t.children || [])])
   }
-  renderReplyChip()
-  renderThread()
-  els.composerText.focus()
+  state.tasks.set(t.id, next)
+  if (next.parent && state.tasks.has(next.parent)) {
+    state.tasks.get(next.parent).children.add(next.id)
+  }
 }
-
-function maybeRenderThread () {
-  if (state.selectedConversation) renderThread()
-}
-
-function renderThread () {
-  if (!state.selectedConversation) return
-  const { other } = state.selectedConversation
-  const recs = state.records
-    .filter(r => onConversation(r.env, other))
-    .sort((a, b) => a.env.ts - b.env.ts)
-  els.messages.innerHTML = ''
-  const consumed = new Set()
-  for (const rec of recs) {
-    if (consumed.has(rec.env.id)) continue
-    const e = rec.env
-    if (e.type === 'tool.invoke') {
-      const reply = recs.find(x => x.env.inReplyTo === e.id && x.env.type === 'tool.result')
-      if (reply) consumed.add(reply.env.id)
-      els.messages.appendChild(renderToolPair(rec, reply))
-    } else if (e.type === 'tool.result' && e.inReplyTo && recs.find(x => x.env.id === e.inReplyTo)) {
-      continue
-    } else if (e.type === 'task.request') {
-      // Group with its updates.
-      const updates = recs.filter(x => x.env.inReplyTo === e.id && x.env.type === 'task.result')
-      for (const u of updates) consumed.add(u.env.id)
-      els.messages.appendChild(renderTaskPair(rec, updates))
-    } else if (e.type === 'task.result' && e.inReplyTo && recs.find(x => x.env.id === e.inReplyTo)) {
-      continue
-    } else if (e.type === 'ack') {
-      // Acks are visible as ✓ ticks on their target — don't render as messages.
-      continue
-    } else if (e.type === 'presence') {
-      continue
-    } else {
-      els.messages.appendChild(renderMessage(rec))
+function syncTasksFromRecords () {
+  for (const r of state.records) {
+    if (r.env.type === 'task.request' && !state.tasks.has(r.env.id)) {
+      state.tasks.set(r.env.id, {
+        id: r.env.id, status: 'pending',
+        title: r.body?.title || '(untitled)',
+        to: r.env.to, from: r.env.from,
+        parent: r.env.inReplyTo || null,
+        createdAt: r.env.ts,
+        children: new Set()
+      })
+    }
+    if (r.env.type === 'task.result' && r.env.inReplyTo) {
+      const t = state.tasks.get(r.env.inReplyTo)
+      if (t) { t.status = r.body?.status || 'progress'; t.last = r.body }
     }
   }
-  els.messages.scrollTop = els.messages.scrollHeight
 }
 
-function renderMessage (rec) {
-  const div = document.createElement('div')
-  div.className = 'msg ' + (isMine(rec.env) ? 'me' : 'them')
-  div.dataset.id = rec.env.id
-  const t = new Date(rec.env.ts).toLocaleTimeString()
-  let body
-  if (rec.env.type === 'chat') body = `<pre>${esc(rec.body.text || '')}</pre>`
-  else body = `<pre>${esc(JSON.stringify(rec.body, null, 2))}</pre>`
-  let attach = ''
-  if (rec.env.attach?.length) {
-    attach = '<div class="attach">'
-    for (const it of rec.env.attach) {
-      attach += `<a class="attach-link" href="/attach?key=${encodeURIComponent(it.key)}&name=${encodeURIComponent(it.name)}" download="${esc(it.name)}">📎 ${esc(it.name)} <span class="size">${formatSize(it.size)}</span></a>`
+// ---------- command palette ----------
+
+function openPalette (preset = '') {
+  state.cmd.open = true
+  state.cmd.query = preset
+  state.cmd.active = 0
+  renderPalette()
+}
+function closePalette () {
+  state.cmd.open = false
+  const node = document.getElementById('cmd-palette')
+  if (node) node.remove()
+}
+function renderPalette () {
+  let node = document.getElementById('cmd-palette')
+  if (!node) {
+    node = document.createElement('div')
+    node.id = 'cmd-palette'
+    node.innerHTML = `
+      <div class="box">
+        <input type="text" placeholder="search · /add · /room · /join · go to…" />
+        <ul class="results"></ul>
+      </div>
+    `
+    document.body.appendChild(node)
+    node.addEventListener('click', (e) => { if (e.target === node) closePalette() })
+    const input = node.querySelector('input')
+    input.addEventListener('input', () => { state.cmd.query = input.value; state.cmd.active = 0; refreshPaletteList() })
+    input.addEventListener('keydown', onPaletteKey)
+  }
+  const input = node.querySelector('input')
+  input.value = state.cmd.query
+  setTimeout(() => input.focus(), 0)
+  refreshPaletteList()
+}
+function refreshPaletteList () {
+  const node = document.getElementById('cmd-palette')
+  if (!node) return
+  const list = node.querySelector('.results')
+  const q = state.cmd.query
+  const items = computePaletteItems(q)
+  state.cmd.items = items
+  list.innerHTML = ''
+  if (!items.length) {
+    const e = document.createElement('li'); e.className = 'empty'; e.textContent = 'no matches'
+    list.appendChild(e); return
+  }
+  let lastGroup = null
+  items.forEach((it, i) => {
+    if (it.group !== lastGroup) {
+      const h = document.createElement('li'); h.className = 'group-h'; h.textContent = it.group
+      list.appendChild(h); lastGroup = it.group
     }
-    attach += '</div>'
-  }
-  const tick = isMine(rec.env) && state.delivered.has(rec.env.id) ? '<span class="tick" title="delivered">✓</span>' : ''
-  const reply = isMine(rec.env) ? '' : `<button class="reply-btn" title="reply">↩</button>`
-  div.innerHTML = `<div class="meta"><span class="type">${rec.env.type}</span><span>${t}</span>${tick}</div>${body}${attach}<div class="actions">${reply}</div>`
-  div.querySelector('.reply-btn')?.addEventListener('click', () => {
-    state.replyingTo = rec.env.id
-    state.replyToPreview = rec.body?.text?.slice(0, 60) || rec.env.type
-    renderReplyChip()
-    els.composerText.focus()
-  })
-  return div
-}
-
-function renderToolPair (req, res) {
-  const div = document.createElement('div')
-  div.className = 'msg tool ' + (isMine(req.env) ? 'me' : 'them')
-  const t = new Date(req.env.ts).toLocaleTimeString()
-  const reqBody = `${esc(req.body.name)}(${esc(JSON.stringify(req.body.args || {}))})`
-  let resBody
-  if (!res) resBody = `<div class="res pulse">awaiting…</div>`
-  else if (res.body.ok) resBody = `<div class="res ok">→ ${esc(JSON.stringify(res.body.value))}</div>`
-  else resBody = `<div class="res err">! ${esc(res.body.error)}</div>`
-  div.innerHTML = `
-    <div class="meta"><span class="type">tool</span><span>${t}</span></div>
-    <div class="pair">
-      <div class="req">${reqBody}</div>
-      ${resBody}
-    </div>`
-  return div
-}
-
-function renderTaskPair (req, updates) {
-  const div = document.createElement('div')
-  div.className = 'msg task ' + (isMine(req.env) ? 'me' : 'them')
-  const t = new Date(req.env.ts).toLocaleTimeString()
-  const last = updates[updates.length - 1]
-  const status = last?.body?.status || 'pending'
-  const progress = updates.filter(u => u.body?.status === 'progress')
-  let updHtml = progress.map(u => `<div class="task-progress">→ ${esc(u.body.note || '')} <span>${Math.round((u.body.progress || 0) * 100)}%</span></div>`).join('')
-  let resHtml
-  if (status === 'done') resHtml = `<div class="res ok">✔ ${esc(JSON.stringify(last.body.value || {}))}</div>`
-  else if (status === 'error') resHtml = `<div class="res err">! ${esc(last.body.error)}</div>`
-  else resHtml = `<div class="res pulse">${esc(status)}…</div>`
-  div.innerHTML = `
-    <div class="meta"><span class="type">task</span><span>${t}</span></div>
-    <div class="task-row">
-      <div class="title">${esc(req.body.title || '(no-title)')}</div>
-      <div class="args">${esc(JSON.stringify(req.body.args || {}))}</div>
-    </div>
-    ${updHtml}
-    ${resHtml}`
-  return div
-}
-
-function renderReplyChip () {
-  if (!els.replyChip) return
-  if (!state.replyingTo) { els.replyChip.hidden = true; return }
-  els.replyChip.hidden = false
-  const target = state.records.find(r => r.env.id === state.replyingTo)
-  els.replyChipText.textContent = '↩ ' + (target?.body?.text?.slice(0, 50) || target?.env?.type || state.replyingTo.slice(0, 12))
-}
-
-function openPeer (pub) {
-  if (pub.startsWith('room:')) {
-    return openConversation({ a: state.me.pubHex, b: pub })
-  }
-  state.selectedPeer = pub
-  state.selectedConversation = null
-  els.rightEmpty.hidden = true
-  els.rightThread.hidden = true
-  els.rightPeer.hidden = false
-  const c = state.me.contacts.find(x => x.pubkey === pub) || { pubkey: pub, alias: '', blurb: '', capabilities: [] }
-  els.peerAlias.textContent = c.alias || pub.slice(0,12)
-  els.peerAddr.textContent = pub
-  els.peerBlurb.textContent = c.blurb || ''
-  els.peerTools.innerHTML = ''
-  for (const tool of c.capabilities || []) {
     const li = document.createElement('li')
-    li.textContent = tool
-    li.style.cursor = 'pointer'
-    li.onclick = () => { els.peerInvokeTool.value = tool; els.peerInvokeArgs.focus() }
-    els.peerTools.appendChild(li)
+    li.className = 'item' + (i === state.cmd.active ? ' active' : '')
+    li.innerHTML = `<span class="icon">${esc(it.icon || '·')}</span><span class="label">${esc(it.label)}</span><span class="hint">${esc(it.hint || '')}</span>`
+    li.onclick = () => { state.cmd.active = i; runPaletteItem(it) }
+    list.appendChild(li)
+  })
+}
+function computePaletteItems (q) {
+  const items = []
+  const lower = q.toLowerCase().trim()
+  // slash commands
+  if (lower.startsWith('/add')) {
+    const arg = q.slice(4).trim()
+    items.push({ group: 'ACTION', icon: '+', label: `add contact ${arg ? '— ' + arg : ''}`, hint: 'pear+agent://…  alias?', kind: 'add', arg })
+    return items
   }
-  if (!els.peerTools.childElementCount) {
-    const li = document.createElement('li'); li.textContent = '(none advertised)'
-    els.peerTools.appendChild(li)
+  if (lower.startsWith('/room')) {
+    const arg = q.slice(5).trim()
+    items.push({ group: 'ACTION', icon: '+', label: `create room${arg ? ' — ' + arg : ''}`, hint: 'name', kind: 'newroom', arg })
+    return items
   }
-  els.peerThreads.innerHTML = ''
-  const li = document.createElement('li')
-  const presenceClass = state.presence[pub]?.state || 'unknown'
-  li.innerHTML = `<i class="presence ${presenceClass}"></i> ${presenceClass}`
-  els.peerThreads.appendChild(li)
+  if (lower.startsWith('/join')) {
+    const arg = q.slice(5).trim()
+    items.push({ group: 'ACTION', icon: '+', label: `join room`, hint: 'paste serialized room JSON', kind: 'joinroom', arg })
+    return items
+  }
+  // contacts/rooms (go-to)
+  for (const c of state.me?.contacts || []) {
+    const hay = (c.alias + ' ' + c.pubkey).toLowerCase()
+    if (lower && !hay.includes(lower)) continue
+    items.push({ group: 'GO TO', icon: '●', label: c.alias || short(c.pubkey), hint: short(c.pubkey), kind: 'thread', target: c.pubkey })
+  }
+  for (const r of state.me?.rooms || []) {
+    const hay = (r.name + ' ' + r.id).toLowerCase()
+    if (lower && !hay.includes(lower)) continue
+    items.push({ group: 'GO TO', icon: '▣', label: r.name || ('room ' + r.id.slice(0, 6)), hint: short(r.id), kind: 'thread', target: 'room:' + r.id })
+  }
+  // base actions
+  const baseActions = [
+    { kind: 'add-pre', label: 'add contact…', icon: '+' },
+    { kind: 'newroom-pre', label: 'create room…', icon: '+' },
+    { kind: 'joinroom-pre', label: 'join room…', icon: '+' },
+    { kind: 'copy-addr', label: 'copy my address', icon: '⎘' }
+  ]
+  for (const a of baseActions) {
+    if (!lower || a.label.toLowerCase().includes(lower)) items.push({ group: 'ACTION', ...a })
+  }
+  return items
+}
+async function runPaletteItem (it) {
+  if (it.kind === 'thread') { closePalette(); openThread(it.target); return }
+  if (it.kind === 'add-pre')  { state.cmd.query = '/add '; renderPalette(); return }
+  if (it.kind === 'newroom-pre') { state.cmd.query = '/room '; renderPalette(); return }
+  if (it.kind === 'joinroom-pre') { state.cmd.query = '/join '; renderPalette(); return }
+  if (it.kind === 'copy-addr') {
+    if (!state.me) return
+    navigator.clipboard.writeText(state.me.address); toast('address copied'); closePalette(); return
+  }
+  if (it.kind === 'add') {
+    const parts = (it.arg || '').split(/\s+/).filter(Boolean)
+    const address = parts[0]
+    const alias = parts.slice(1).join(' ')
+    if (!address) return toast('need pear+agent:// address')
+    try {
+      await fetch('/contacts/add', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ address, alias })
+      })
+      toast('contact added')
+      closePalette()
+      await refreshMe()
+    } catch (e) { toast('add failed: ' + e.message) }
+    return
+  }
+  if (it.kind === 'newroom') {
+    const name = it.arg || ''
+    try {
+      const room = await fetch('/room/new', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ name })
+      }).then(r => r.json())
+      await navigator.clipboard.writeText(room.share)
+      toast('room created — share copied')
+      closePalette()
+      await refreshMe()
+    } catch (e) { toast('room failed: ' + e.message) }
+    return
+  }
+  if (it.kind === 'joinroom') {
+    const share = it.arg
+    if (!share) return toast('paste serialized room JSON')
+    try {
+      await fetch('/room/join', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ share })
+      })
+      toast('joined room')
+      closePalette()
+      await refreshMe()
+    } catch (e) { toast('join failed: ' + e.message) }
+  }
+}
+function onPaletteKey (e) {
+  const list = state.cmd.items
+  if (e.key === 'Escape') { e.preventDefault(); closePalette(); return }
+  if (e.key === 'ArrowDown') { e.preventDefault(); state.cmd.active = Math.min(list.length - 1, state.cmd.active + 1); refreshPaletteList(); return }
+  if (e.key === 'ArrowUp') { e.preventDefault(); state.cmd.active = Math.max(0, state.cmd.active - 1); refreshPaletteList(); return }
+  if (e.key === 'Enter') { e.preventDefault(); const it = list[state.cmd.active]; if (it) runPaletteItem(it); return }
 }
 
-function closeRight () {
-  state.selectedConversation = null
-  state.selectedPeer = null
-  els.rightThread.hidden = true
-  els.rightPeer.hidden = true
-  els.rightEmpty.hidden = false
+// ---------- keyboard ----------
+
+function onGlobalKey (e) {
+  // ⌘K / Ctrl+K open palette
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault()
+    if (state.cmd.open) closePalette()
+    else openPalette('')
+    return
+  }
+  if (e.key === 'Escape') {
+    if (state.cmd.open) { closePalette(); return }
+    if (state.view.kind !== 'empty') { closeRight(); return }
+  }
+  // ignore typing inside inputs for J/K nav
+  const tag = (document.activeElement?.tagName || '').toLowerCase()
+  if (tag === 'input' || tag === 'textarea') return
+  if (e.key === 'j' || e.key === 'ArrowDown') { e.preventDefault(); cycleContact(1); return }
+  if (e.key === 'k' || e.key === 'ArrowUp')   { e.preventDefault(); cycleContact(-1); return }
+  if (e.key === 'r' && state.view.kind === 'thread') {
+    e.preventDefault()
+    const recs = state.records.filter(r => onConversation(r.env, state.view.target) && r.env.type === 'chat' && r.env.from !== state.me?.pubHex)
+    const last = recs[recs.length - 1]
+    if (last) {
+      state.replyingTo = last.env.id
+      state.replyToPreview = last.body?.text?.slice(0, 60) || last.env.type
+      renderRightSheet()
+    }
+  }
+}
+function cycleContact (dir) {
+  const list = [...(state.me?.contacts || []).map(c => c.pubkey), ...(state.me?.rooms || []).map(r => 'room:' + r.id)]
+  if (!list.length) return
+  const cur = state.view.target
+  let idx = list.indexOf(cur)
+  if (idx === -1) idx = -1
+  idx = (idx + dir + list.length) % list.length
+  openThread(list[idx])
 }
 
-async function sendInConversation (type, text, inReplyTo) {
-  if (!state.selectedConversation) return
-  const { kind, other } = state.selectedConversation
-  const attachFiles = []
-  if (els.composerAttach?.files?.length) {
-    // Browsers can't hand the server a local path; we'd need a separate
-    // /upload endpoint. For now, skip — the CLI/headless path uses paths.
-    flash('attachments via browser not yet supported (use CLI)')
-  }
-  const body = type === 'chat'
-    ? { text }
-    : type === 'tool.invoke'
-      ? toolInvokeBody(text)
-      : type === 'task.request'
-        ? taskRequestBody(text)
-        : { text }
-  if (kind === 'room') {
-    const id = other.slice('room:'.length)
-    return fetch('/room/send', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id, type, body }) })
-  }
-  if (type === 'tool.invoke') {
-    return fetch('/invoke', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ to: other, tool: body.name, args: body.args }) })
-  }
-  if (type === 'task.request') {
-    return fetch('/task', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ to: other, ...body }) })
-  }
-  return fetch('/send', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ to: other, type, body, inReplyTo: inReplyTo || null, attach: attachFiles.length ? attachFiles : undefined }) })
-}
-
-function toolInvokeBody (text) {
-  const [name, ...rest] = text.split(/\s+/)
-  let args = {}
-  try { args = JSON.parse(rest.join(' ') || '{}') } catch {}
-  return { name, args }
-}
-function taskRequestBody (text) {
-  const [title, ...rest] = text.split(/\s+/)
-  let args = {}
-  try { args = JSON.parse(rest.join(' ') || '{}') } catch {}
-  return { title, args }
-}
+// ---------- helpers ----------
 
 function onConversation (env, other) {
   if (other.startsWith('room:')) return env.to === other
-  // Direct conversation between me and `other`.
   return (env.from === state.me.pubHex && env.to === other) ||
          (env.from === other && env.to === state.me.pubHex)
 }
-
-function isMine (env) { return env.from === state.me.pubHex }
-
+function isMine (env) { return env.from === state.me?.pubHex }
 function labelForRoom (id) {
   const r = state.me.rooms.find(x => x.id === id)
   return r?.name || ('room ' + id.slice(0, 6))
 }
-
 function esc (s) { return String(s ?? '').replace(/[<>&"]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;' }[c])) }
-
+function short (s) { return s ? (s.length > 12 ? s.slice(0, 6) + '…' + s.slice(-4) : s) : '' }
+function truncAddr (a) {
+  if (!a) return ''
+  // strip protocol prefix for top-bar density
+  const m = /^pear\+agent:\/\/([0-9a-f]+)/i.exec(a)
+  const hex = m ? m[1] : a
+  return hex.slice(0, 6) + '…' + hex.slice(-4)
+}
+function formatTime (ts) {
+  const d = new Date(ts)
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mm = String(d.getMinutes()).padStart(2, '0')
+  const ss = String(d.getSeconds()).padStart(2, '0')
+  return `${hh}:${mm}:${ss}`
+}
+function formatElapsed (ms) {
+  const s = Math.floor(ms / 1000)
+  if (s < 60) return s + 's'
+  const m = Math.floor(s / 60)
+  if (m < 60) return m + 'm'
+  return Math.floor(m / 60) + 'h'
+}
 function formatSize (n) {
   if (n == null) return ''
   if (n < 1024) return n + 'B'
   if (n < 1024 * 1024) return (n / 1024).toFixed(1) + 'K'
   return (n / 1024 / 1024).toFixed(1) + 'M'
 }
-
-function flash (msg) {
+function toast (msg) {
+  const host = el('toast-host')
   const div = document.createElement('div')
-  div.className = 'flash'
+  div.className = 'toast'
   div.textContent = msg
-  document.body.appendChild(div)
-  setTimeout(() => div.remove(), 2000)
+  host.appendChild(div)
+  setTimeout(() => div.remove(), 2200)
 }

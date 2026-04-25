@@ -27,11 +27,14 @@ export class RPC extends EventEmitter {
 
   // Client: invoke a tool on a remote agent.
   async invoke (toPubHex, name, args, { timeout = 30000 } = {}) {
+    const body = { name, args }
     const env = await this.outbox.send({
       to: toPubHex,
       type: 'tool.invoke',
-      body: { name, args }
+      body
     })
+    // Mirror into our own inbox so the UI / thread sees what we sent.
+    await this.inbox.record(env, body).catch(err => this.emit('error', err))
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pending.delete(env.id)

@@ -42,12 +42,15 @@ export class Tasks extends EventEmitter {
   // task.result arrives (status: done|error|cancelled), and a stream of
   // status updates via emitter on this Tasks instance under 'update'.
   async request (toPubHex, { title, description, args, inReplyTo } = {}) {
+    const body = { title: title || 'task', description: description || '', args: args || {} }
     const env = await this.outbox.send({
       to: toPubHex,
       type: 'task.request',
-      body: { title: title || 'task', description: description || '', args: args || {} },
+      body,
       inReplyTo
     })
+    // Mirror into our own inbox so the UI / thread sees what we sent.
+    await this.inbox.record(env, body).catch(err => this.emit('error', err))
     return new Promise((resolve, reject) => {
       this.tasks.set(env.id, {
         id: env.id,
