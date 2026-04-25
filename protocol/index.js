@@ -184,7 +184,10 @@ export class Agent extends EventEmitter {
     const env = await this.outbox.send({ to: dest, type, body, inReplyTo: opts.inReplyTo, attach })
     this.ack.trackOutgoing(env)
     // Mirror into our own inbox so the UI/thread sees what we just sent.
-    await this.inbox.record(env, body)
+    // The wire env has attach=[] for direct messages (drive keys are
+    // sealed inside the ciphertext); restore them on the local copy so
+    // the sender's own UI still shows their attachments.
+    await this.inbox.record({ ...env, attach: attach || [] }, body)
     return env
   }
 
