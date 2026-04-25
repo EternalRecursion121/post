@@ -95,6 +95,19 @@ const server = http.createServer(async (req, res) => {
       const card = await agent.addContact(address, alias)
       return json(res, card)
     }
+    if (req.method === 'POST' && req.url === '/contacts/delete') {
+      const { pubkey, block } = await body(req)
+      const out = await agent.deleteContact(pubkey, { block: block !== false })
+      return json(res, out)
+    }
+    if (req.method === 'POST' && req.url === '/contacts/unblock') {
+      const { pubkey } = await body(req)
+      const out = await agent.unblockContact(pubkey)
+      return json(res, out)
+    }
+    if (req.method === 'GET' && req.url === '/contacts/blocked') {
+      return json(res, await agent.blockedContacts())
+    }
     if (req.method === 'POST' && req.url === '/room/new') {
       const { name } = await body(req)
       const room = await agent.createRoom(name || '')

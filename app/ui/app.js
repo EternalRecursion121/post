@@ -532,6 +532,29 @@ function renderPeerView (target) {
   cta.onclick = () => openThread(target)
   body.appendChild(cta)
 
+  // remove contact CTA — only for actual contacts (not random pubkeys we
+  // see in records). Confirms once and adds the peer to the blocklist so
+  // gossip doesn't resurrect them.
+  if (state.me.contacts.find(x => x.pubkey === target)) {
+    const rm = document.createElement('button')
+    rm.className = 'open-chat'
+    rm.style.cssText = 'background:transparent;color:var(--text-muted);border:1px solid var(--border);margin-top:6px'
+    rm.innerHTML = `✕ remove contact`
+    rm.onclick = async () => {
+      if (!confirm(`Remove ${c.alias || short(target)}? They won't reappear via gossip until you unblock.`)) return
+      try {
+        await fetch('/contacts/delete', {
+          method: 'POST', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ pubkey: target, block: true })
+        })
+        toast('contact removed')
+        closeRight()
+        await refreshMe()
+      } catch (e) { toast('remove failed: ' + e.message) }
+    }
+    body.appendChild(rm)
+  }
+
   // presence
   body.appendChild(block('PRESENCE', `
     <div class="pres-line">

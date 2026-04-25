@@ -17,7 +17,7 @@ export class Inbox extends EventEmitter {
     this.identity = identity
     this.bee = bee          // Hyperbee — sorted message log
     this.cursors = cursors  // Hyperbee — peerHex -> last processed length
-    this.watching = new Map() // peerHex -> core
+    this.watching = new Map() // peerHex -> { core, onAppend }
     this.rooms = new Map()  // idHex -> 32-byte secret key (Buffer)
   }
 
@@ -29,9 +29,20 @@ export class Inbox extends EventEmitter {
 
   stop () {
     this._stopped = true
-    for (const [, core] of this.watching) {
-      try { core.removeAllListeners('append') } catch {}
+    for (const [, w] of this.watching) {
+      try { w.core.removeAllListeners('append') } catch {}
     }
+  }
+
+  // Stop watching a peer's outbox. Detaches the append listener and leaves
+  // the swarm topic so we no longer dial them. Idempotent.
+  async unfollow (peerPubkey) {
+    const hex = b4a.isBuffer(peerPubkey) ? b4a.toString(peerPubkey, 'hex') : peerPubkey
+    const w = this.watching.get(hex)
+    if (!w) return
+    this.watching.delete(hex)
+    try { w.core.removeListener('append', w.onAppend) } catch {}
+    try { if (this.swarm.leave) await this.swarm.leave(w.core.discoveryKey) } catch {}
   }
 
   // Schedule a drain for a peer. Drains for the same peer are serialised
@@ -90,16 +101,16 @@ export class Inbox extends EventEmitter {
     // replication would never match.
     const core = this.store.get({ keyPair: { publicKey: key } })
     await core.ready()
-    this.watching.set(hex, core)
 
     // Join the discovery key as a client so we find peers serving this core.
     this.swarm.join(core.discoveryKey, { server: false, client: true })
 
-    const schedule = () => this._scheduleDrain(hex, core)
-    core.on('append', schedule)
+    const onAppend = () => this._scheduleDrain(hex, core)
+    core.on('append', onAppend)
+    this.watching.set(hex, { core, onAppend })
 
     // Catch up on existing entries.
-    schedule()
+    onAppend()
   }
 
   async _drain (hex, core) {

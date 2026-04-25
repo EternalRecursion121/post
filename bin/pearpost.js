@@ -14,6 +14,9 @@ Usage:
   pearpost id                           print my pear+agent:// address
   pearpost discover                     join the directory and print peers
   pearpost contacts                     list known contacts
+  pearpost contacts rm <pubhex>         remove a contact and block re-gossip
+  pearpost contacts unblock <pubhex>    let gossip restore a previously removed contact
+  pearpost contacts purge               remove + block every contact (clean slate)
   pearpost add <addr> [alias]           add a contact manually
   pearpost chat <addr> <text...>        send a chat message
   pearpost send <addr> <type> <json>    send any envelope type with JSON body
@@ -54,6 +57,29 @@ async function run () {
       return shutdown(agent)
 
     case 'contacts': {
+      const sub = rest[0]
+      if (sub === 'rm' || sub === 'remove' || sub === 'delete') {
+        const pub = rest[1]
+        if (!pub) throw new Error('contacts rm: need pubhex')
+        const out = await agent.deleteContact(pub)
+        console.log('removed', out.pubkey, out.blocked ? '(blocked)' : '')
+        return shutdown(agent)
+      }
+      if (sub === 'unblock') {
+        const pub = rest[1]
+        if (!pub) throw new Error('contacts unblock: need pubhex')
+        await agent.unblockContact(pub)
+        console.log('unblocked', pub)
+        return shutdown(agent)
+      }
+      if (sub === 'purge') {
+        const all = await agent.contacts()
+        for (const c of all) {
+          await agent.deleteContact(c.pubkey).catch(err => console.error('!', c.pubkey.slice(0, 12), err.message))
+        }
+        console.log(`purged ${all.length} contact(s) — all blocked`)
+        return shutdown(agent)
+      }
       for (const c of await agent.contacts()) {
         console.log(`${c.pubkey}  ${c.alias || ''}  [${(c.capabilities || []).join(', ')}]`)
       }

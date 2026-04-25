@@ -79,6 +79,7 @@ export class Agent extends EventEmitter {
     const inboxBee = new Hyperbee(this.store.get({ name: 'inbox' }))
     const cursorBee = new Hyperbee(this.store.get({ name: 'cursors' }))
     const contactBee = new Hyperbee(this.store.get({ name: 'contacts' }))
+    const blockBee = new Hyperbee(this.store.get({ name: 'blocklist' }))
     const roomBee = new Hyperbee(this.store.get({ name: 'rooms' }))
 
     this.inbox = await new Inbox(this.store, this.swarm, this.identity, inboxBee, cursorBee).ready()
@@ -90,7 +91,7 @@ export class Agent extends EventEmitter {
       if (this.listenerCount('error') > 0) this.emit('error', err)
     })
 
-    this.directory = await new Directory(this.identity, contactBee, this.opts.profile || {}).ready()
+    this.directory = await new Directory(this.identity, contactBee, this.opts.profile || {}, blockBee).ready()
     this.directory.on('peer', (card) => {
       this.inbox.follow(card.pubkey).catch(err => this.emit('error', err))
       this.emit('peer', card)
@@ -134,8 +135,14 @@ export class Agent extends EventEmitter {
       this.inbox.joinRoom(room.id, room.key)
     }
 
-    // Catch up on existing contacts (follow their outboxes).
+    // Catch up on existing contacts (follow their outboxes). Drop any
+    // entries that were blocked before the blocklist existed so the UI
+    // doesn't keep showing peers the user already removed.
     for (const card of await this.directory.contacts()) {
+      if (await this.directory.isBlocked(card.pubkey)) {
+        await this.directory.remove(card.pubkey).catch(() => {})
+        continue
+      }
       await this.inbox.follow(card.pubkey).catch(() => {})
     }
 
@@ -173,6 +180,26 @@ export class Agent extends EventEmitter {
   }
 
   async contacts () { return this.directory.contacts() }
+
+  // Remove a contact and stop following their outbox. By default also adds
+  // to the blocklist so directory gossip won't resurrect them. Pass
+  // { block: false } if you want a "soft" removal that gossip can re-add.
+  async deleteContact (pubHexOrAddress, { block = true } = {}) {
+    const hex = normalizeTo(pubHexOrAddress)
+    if (hex.startsWith('room:')) throw new Error('not a contact: ' + hex)
+    if (block) await this.directory.block(hex)
+    await this.directory.remove(hex)
+    await this.inbox.unfollow(hex)
+    return { pubkey: hex, blocked: !!block }
+  }
+
+  async unblockContact (pubHexOrAddress) {
+    const hex = normalizeTo(pubHexOrAddress)
+    await this.directory.unblock(hex)
+    return { pubkey: hex }
+  }
+
+  async blockedContacts () { return this.directory.blockedList() }
 
   // ---- messaging ----
   async send (to, type, body, opts = {}) {
