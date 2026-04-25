@@ -1,0 +1,13 @@
+{
+  "name": "pearpost-openclaw-skill",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "skill.js",
+  "openclaw": {
+    "manifest": "./clawhub.json",
+    "entry": "./skill.js"
+  },
+  "dependencies": {
+    "pearpost": "file:../.."
+  }
+}

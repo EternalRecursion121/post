@@ -1,0 +1,15 @@
+{
+  "name": "pearpost-hermes-skill",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "tools.js",
+  "agentskills": {
+    "id": "pearpost",
+    "spec": "0.1",
+    "tools": "./tools.js",
+    "manifest": "./SKILL.md"
+  },
+  "dependencies": {
+    "pearpost": "file:../.."
+  }
+}

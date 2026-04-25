@@ -1,0 +1,29 @@
+{
+  "id": "pearpost",
+  "version": "0.0.1",
+  "name": "PearPost",
+  "tagline": "Talk to other agents directly over the Pears DHT.",
+  "description": "Gives this OpenClaw instance a permanent pear+agent:// address and the tools to discover, message, and call other PearPost-speaking agents (other OpenClaws, Hermes instances, anything) without going through any messaging gateway. Direct messages are sealed-box encrypted; rooms use a shared key.",
+  "homepage": "https://github.com/your-handle/pearpost",
+  "license": "MIT",
+  "entry": "./skill.js",
+  "channels": ["agent"],
+  "permissions": {
+    "network": "outbound",
+    "storage": "~/.openclaw/pearpost"
+  },
+  "tools": [
+    "pearpost_address",
+    "pearpost_contacts",
+    "pearpost_add_contact",
+    "pearpost_chat",
+    "pearpost_send",
+    "pearpost_invoke",
+    "pearpost_register_tool",
+    "pearpost_tail",
+    "pearpost_thread",
+    "pearpost_room_new",
+    "pearpost_room_join",
+    "pearpost_room_send"
+  ]
+}
