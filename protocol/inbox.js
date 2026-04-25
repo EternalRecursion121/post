@@ -24,6 +24,29 @@ export class Inbox extends EventEmitter {
   joinRoom (roomKeyHex) { this.rooms.add(roomKeyHex) }
   leaveRoom (roomKeyHex) { this.rooms.delete(roomKeyHex) }
 
+  // Schedule a drain for a peer. Drains for the same peer are serialised
+  // (re-running once if more appends happened during the current run) so
+  // we never have two concurrent core.get waits racing for the same index.
+  _scheduleDrain (hex, core) {
+    if (this._draining?.has(hex)) {
+      this._pending = this._pending || new Set()
+      this._pending.add(hex)
+      return
+    }
+    this._draining = this._draining || new Map()
+    this._draining.set(hex, this._runDrain(hex, core))
+  }
+
+  async _runDrain (hex, core) {
+    try {
+      do {
+        this._pending?.delete(hex)
+        await this._drain(hex, core)
+      } while (this._pending?.has(hex))
+    } catch (err) { this.emit('error', err) }
+    finally { this._draining.delete(hex) }
+  }
+
   // Mirror an envelope we just SENT into our own inbox so threads include
   // both sides without us having to decrypt our own ciphertext (which we
   // can't — sealed-box is one-way to the recipient).
@@ -61,17 +84,18 @@ export class Inbox extends EventEmitter {
     // Join the discovery key as a client so we find peers serving this core.
     this.swarm.join(core.discoveryKey, { server: false, client: true })
 
-    const drain = () => this._drain(hex, core).catch(err => this.emit('error', err))
-    core.on('append', drain)
+    const schedule = () => this._scheduleDrain(hex, core)
+    core.on('append', schedule)
 
     // Catch up on existing entries.
-    drain()
+    schedule()
   }
 
   async _drain (hex, core) {
     const cursorVal = await this.cursors.get(hex)
     let from = cursorVal ? Number(b4a.toString(cursorVal.value)) : 0
     const to = core.length
+    if (to <= from) return
     for (let i = from; i < to; i++) {
       let buf
       try { buf = await core.get(i, { wait: true, timeout: 15000 }) } catch { break }
@@ -88,6 +112,9 @@ export class Inbox extends EventEmitter {
       const beeKey = recordKey(env)
       const record = { env, body: result.body }
       await this.bee.put(beeKey, b4a.from(JSON.stringify(record)))
+      if (env.attach?.length && this.attachments) {
+        this.attachments.materialize(env).catch(() => {})
+      }
       this.emit('message', { key: beeKey, ...record })
     }
     await this.cursors.put(hex, b4a.from(String(to)))

@@ -16,6 +16,11 @@ import { Inbox } from './inbox.js'
 import { Directory } from './directory.js'
 import { RPC } from './rpc.js'
 import { Room } from './rooms.js'
+import { Attachments } from './attachments.js'
+import { Presence } from './presence.js'
+import { Ack } from './ack.js'
+import { Tasks } from './tasks.js'
+import { seal as sealEnvelope, open as openEnvelope } from './envelope.js'
 
 export { Room } from './rooms.js'
 export { TYPES } from './envelope.js'
@@ -87,6 +92,27 @@ export class Agent extends EventEmitter {
     this.rpc = new RPC(this.outbox, this.inbox)
     this.rpc.on('error', (err) => this.emit('error', err))
 
+    this.attachments = new Attachments(this.store)
+    this.inbox.attachments = this.attachments
+
+    if (this.opts.ack !== false) {
+      this.ack = new Ack(this.outbox, this.inbox)
+      this.ack.on('error', (err) => this.emit('error', err))
+      this.ack.on('delivered', (info) => this.emit('delivered', info))
+    } else {
+      this.ack = { trackOutgoing () {}, isDelivered () { return false } }
+    }
+
+    this.presence = new Presence(this.outbox, this.inbox, this.directory, {
+      interval: this.opts.presenceInterval,
+      enabled: this.opts.presence !== false
+    })
+    this.presence.on('peer', (info) => this.emit('presence', info))
+
+    this.tasks = new Tasks(this.outbox, this.inbox)
+    this.tasks.on('task', (t) => this.emit('task', t))
+    this.tasks.on('update', (t) => this.emit('task', t))
+
     // Rejoin known rooms.
     this._roomBee = roomBee
     for await (const { value } of roomBee.createReadStream()) {
@@ -104,10 +130,14 @@ export class Agent extends EventEmitter {
     if (this.opts.directory !== false) await this.directory.start()
     if (this.swarm.flush) await this.swarm.flush().catch(() => {})
 
+    // Begin presence ticker.
+    this.presence.start()
+
     return this
   }
 
   async stop () {
+    try { if (this.presence) this.presence.stop() } catch {}
     try { if (this.directory) await this.directory.stop() } catch {}
     try { if (this.swarm && this.swarm.destroy) await this.swarm.destroy() } catch {}
     try { await this.store.close() } catch {}
@@ -128,10 +158,25 @@ export class Agent extends EventEmitter {
   // ---- messaging ----
   async send (to, type, body, opts = {}) {
     const dest = normalizeTo(to)
-    const env = await this.outbox.send({ to: dest, type, body, inReplyTo: opts.inReplyTo, attach: opts.attach })
+    if (dest.startsWith('room:')) {
+      return this.sendRoom(dest.slice('room:'.length), type, body, opts)
+    }
+    const attach = await this._prepareAttach(opts.attach)
+    const env = await this.outbox.send({ to: dest, type, body, inReplyTo: opts.inReplyTo, attach })
+    this.ack.trackOutgoing(env)
     // Mirror into our own inbox so the UI/thread sees what we just sent.
     await this.inbox.record(env, body)
     return env
+  }
+
+  async _prepareAttach (attach) {
+    if (!Array.isArray(attach) || !attach.length) return attach
+    if (!attach.some(a => typeof a === 'string' || a?.path)) return attach
+    return this.attachments.pack(Date.now().toString(36), attach)
+  }
+
+  async readAttachment (item) {
+    return this.attachments.read(item)
   }
 
   async chat (to, text) { return this.send(to, 'chat', { text }) }
@@ -172,7 +217,21 @@ export class Agent extends EventEmitter {
   async sendRoom (roomIdHex, type, body, opts = {}) {
     const room = this._joinedRooms.get(roomIdHex)
     if (!room) throw new Error('not in room: ' + roomIdHex)
-    return room.send(this.outbox, { type, body, inReplyTo: opts.inReplyTo, attach: opts.attach }, this.inbox)
+    const attach = await this._prepareAttach(opts.attach)
+    const env = await this.outbox.send({
+      to: room.to,
+      type, body,
+      inReplyTo: opts.inReplyTo,
+      attach
+    })
+    await this.inbox.record(env, body)
+    return env
+  }
+
+  async roomTimeline (roomIdHex, opts = {}) {
+    const all = await this.inbox.list({ limit: opts.limit || 1000, reverse: false })
+    const { roomTimeline } = await import('./rooms.js')
+    return roomTimeline(all, roomIdHex)
   }
 
   // ---- introspection ----
@@ -181,6 +240,13 @@ export class Agent extends EventEmitter {
 
   async messages (opts) { return this.inbox.list(opts) }
   async thread (id) { return this.inbox.thread(id) }
+
+  // ---- tasks ----
+  async task (to, payload) {
+    const dest = normalizeTo(to)
+    return this.tasks.request(dest, payload)
+  }
+  registerTask (name, handler) { this.tasks.register(name, handler); return this }
 }
 
 // Minimal stand-in for tests where we pipe stores directly. The Inbox only

@@ -38,7 +38,7 @@ async function main () {
 
   // ---- 1. chat delivery ----
   await test('chat delivers and decrypts', async () => {
-    const got = once(bob, 'message')
+    const got = waitFor(bob, 'message', r => r.env.type === 'chat' && r.body.text === 'hello bob')
     await alice.chat(bob.pubHex, 'hello bob')
     const rec = await got
     assertEq(rec.env.type, 'chat')
@@ -48,12 +48,10 @@ async function main () {
 
   // ---- 2. thread linking ----
   await test('inReplyTo materialises a thread', async () => {
-    const got1 = once(alice, 'message')
     const root = await alice.send(bob.pubHex, 'chat', { text: 'q?' })
-    await wait(120)
+    await waitFor(bob, 'message', r => r.env.id === root.id)
     await bob.send(alice.pubHex, 'chat', { text: 'a!' }, { inReplyTo: root.id })
-    await got1
-    await wait(120)
+    await waitFor(alice, 'message', r => r.body.text === 'a!')
     const thread = await alice.thread(root.id)
     assertEq(thread.length, 2)
     assertEq(thread[1].body.text, 'a!')
@@ -77,22 +75,32 @@ async function main () {
   // ---- 4. rooms ----
   await test('rooms: two members exchange messages', async () => {
     const room = await alice.createRoom('hackers')
-    await bob.joinRoom(room.serialize())
-    const got = once(bob, 'message')
+    const joined = await bob.joinRoom(room.serialize())
+    assertEq(joined.id, room.id)
+    const got = waitFor(bob, 'message', r => r.env.to === 'room:' + room.id && r.body?.text === 'standup in 5')
     await alice.sendRoom(room.id, 'chat', { text: 'standup in 5' })
     const rec = await got
     assertEq(rec.env.to, 'room:' + room.id)
     assertEq(rec.body.text, 'standup in 5')
   })
 
+  await test('rooms: two-way exchange linearizes', async () => {
+    const room = await alice.createRoom('two-way')
+    await bob.joinRoom(room.serialize())
+    const seenAlice = waitFor(alice, 'message', r => r.body.text === 'hi from bob')
+    const seenBob = waitFor(bob, 'message', r => r.body.text === 'hi from alice')
+    await alice.sendRoom(room.id, 'chat', { text: 'hi from alice' })
+    await bob.sendRoom(room.id, 'chat', { text: 'hi from bob' })
+    await Promise.all([seenAlice, seenBob])
+  })
+
   await test('rejects messages for rooms we have not joined', async () => {
-    // Carol-style: alice creates a private room, doesn't share with bob.
     const secret = await alice.createRoom('private')
     let received = false
     const off = (rec) => { if (rec.env.to === 'room:' + secret.id) received = true }
     bob.on('message', off)
     await alice.sendRoom(secret.id, 'chat', { text: 'inside' })
-    await wait(200)
+    await wait(400)
     bob.removeListener('message', off)
     assertEq(received, false)
   })
@@ -113,12 +121,17 @@ async function main () {
   process.exit(failed ? 1 : 0)
 }
 
-async function spawn (name) {
+async function spawn (name, opts = {}) {
   const dir = path.join(TMP, name)
   await fs.mkdir(dir, { recursive: true })
   // Disable directory swarm — we're in-process; no DHT.
-  const agent = new Agent(dir, { profile: { alias: name }, directory: false })
-  // Don't start hyperswarm — replace with manual pipe.
+  const agent = new Agent(dir, {
+    profile: { alias: name },
+    directory: false,
+    presence: opts.presence ?? false,
+    ack: opts.ack ?? true,
+    ...opts
+  })
   await agent.startNoSwarm()
   return agent
 }
@@ -145,6 +158,19 @@ function wait (ms) { return new Promise(r => setTimeout(r, ms)) }
 function once (emitter, event) {
   return new Promise((resolve) => {
     const handler = (...args) => { emitter.removeListener(event, handler); resolve(args[0]) }
+    emitter.on(event, handler)
+  })
+}
+
+function waitFor (emitter, event, predicate, ms = 5000) {
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => { emitter.removeListener(event, handler); reject(new Error('waitFor timeout: ' + event)) }, ms)
+    const handler = (rec) => {
+      if (!predicate(rec)) return
+      clearTimeout(t)
+      emitter.removeListener(event, handler)
+      resolve(rec)
+    }
     emitter.on(event, handler)
   })
 }
