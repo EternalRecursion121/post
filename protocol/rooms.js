@@ -33,6 +33,13 @@ export class Room {
     this.key = b4a.isBuffer(key) ? key : b4a.from(key, 'hex')
     if (this.key.length !== 32) throw new Error('room key must be 32 bytes')
     this.name = opts.name || ''
+    // Members are pubHex strings of peers known to be in this room. The
+    // share string carries them so a joiner can auto-follow each member's
+    // outbox; without that, the joiner has the room key but no way to
+    // *receive* room messages (each member's room envelopes ride their
+    // own outbox). The list is advisory — anyone with the key is "in",
+    // and the list will lag behind reality, but it's enough to bootstrap.
+    this.members = Array.isArray(opts.members) ? [...opts.members] : []
     const idBuf = b4a.alloc(32)
     sodium.crypto_generichash(idBuf, this.key)
     this._idHex = b4a.toString(idBuf, 'hex')
@@ -42,19 +49,27 @@ export class Room {
   get keyHex () { return b4a.toString(this.key, 'hex') }
   get to () { return 'room:' + this._idHex }
 
-  static create (name = '') {
+  addMember (pubHex) {
+    if (!pubHex || this.members.includes(pubHex)) return false
+    this.members.push(pubHex)
+    return true
+  }
+
+  static create (name = '', opts = {}) {
     const k = b4a.alloc(32)
     sodium.randombytes_buf(k)
-    return new Room(k, { name })
+    return new Room(k, { name, members: opts.members })
   }
 
   serialize () {
-    return JSON.stringify({ key: this.keyHex, name: this.name })
+    const o = { key: this.keyHex, name: this.name }
+    if (this.members.length) o.members = this.members
+    return JSON.stringify(o)
   }
 
   static deserialize (s) {
     const o = JSON.parse(s)
-    return new Room(o.key, { name: o.name })
+    return new Room(o.key, { name: o.name, members: o.members })
   }
 }
 

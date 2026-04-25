@@ -83,6 +83,7 @@ export class Agent extends EventEmitter {
     const roomBee = new Hyperbee(this.store.get({ name: 'rooms' }))
 
     this.inbox = await new Inbox(this.store, this.swarm, this.identity, inboxBee, cursorBee).ready()
+    this.inbox.on('message', (rec) => this._learnRoomMember(rec))
     this.inbox.on('message', (rec) => this.emit('message', rec))
     this.inbox.on('error', (err) => {
       // Don't crash the whole agent on background drain errors — the most
@@ -174,8 +175,19 @@ export class Agent extends EventEmitter {
     const card = typeof addressOrCard === 'string'
       ? { pubkey: b4a.toString(pubFromAddress(addressOrCard), 'hex'), alias: alias || '', blurb: '', capabilities: [], ts: Date.now() }
       : addressOrCard
+    // Adding a peer who's on our blocklist would silently fail later
+    // (gossip would re-block them); fail loudly instead.
+    if (await this.directory.isBlocked(card.pubkey)) {
+      throw new Error('contact is blocked: unblock first')
+    }
     await this.directory.addManual(card)
     await this.inbox.follow(card.pubkey)
+    // Kick the swarm so the DHT lookup actually starts now. Without this,
+    // the topic join we did inside follow() is lazy and the first send/
+    // invoke can sit waiting for the peer to be discovered. flush() is a
+    // best-effort wait for pending DHT ops; we don't fail the add if it
+    // errors (it can fail benignly during teardown or on the noop swarm).
+    if (this.swarm?.flush) await this.swarm.flush().catch(() => {})
     return card
   }
 
@@ -262,13 +274,50 @@ export class Agent extends EventEmitter {
 
   // ---- rooms ----
   async createRoom (name = '') {
-    const room = Room.create(name)
+    const room = Room.create(name, { members: [this.identity.pubHex] })
     return this._registerRoom(room)
   }
 
   async joinRoom (serialized) {
     const room = Room.deserialize(serialized)
-    return this._registerRoom(room)
+    // Make sure we list ourselves on the local copy — outgoing room
+    // messages re-share the member list, so a third joiner can find us.
+    room.addMember(this.identity.pubHex)
+    await this._registerRoom(room)
+    // Auto-follow every other member so their room messages actually
+    // reach our inbox. The room key alone is useless without the outbox
+    // to read it from.
+    for (const pub of room.members) {
+      if (pub === this.identity.pubHex) continue
+      await this._followRoomMember(pub).catch(err => this.emit('error', err))
+    }
+    return room
+  }
+
+  async _followRoomMember (pubHex) {
+    if (await this.directory.isBlocked(pubHex)) return
+    const existing = (await this.directory.contacts()).find(c => c.pubkey === pubHex)
+    if (!existing) {
+      await this.directory.addManual({
+        pubkey: pubHex, alias: '', blurb: '', capabilities: [], ts: Date.now()
+      })
+    }
+    await this.inbox.follow(pubHex)
+  }
+
+  // Learn members from incoming room traffic. If we see a room message
+  // from someone not yet in our local room.members, fold them in and
+  // re-persist so future shares of room.serialize() carry the larger set.
+  _learnRoomMember (rec) {
+    const env = rec?.env
+    if (!env || !env.to || !env.to.startsWith('room:')) return
+    const id = env.to.slice('room:'.length)
+    const room = this._joinedRooms.get(id)
+    if (!room) return
+    if (!env.from || env.from === this.identity.pubHex) return
+    if (room.addMember(env.from)) {
+      this._roomBee?.put(room.id, b4a.from(room.serialize())).catch(() => {})
+    }
   }
 
   async _registerRoom (room) {
