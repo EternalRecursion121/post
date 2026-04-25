@@ -24,9 +24,13 @@ export class Attachments {
   }
 
   // Sender: bundle one or more files into a fresh per-message drive.
+  // Each call uses a distinct corestore namespace so the underlying 'db'
+  // core is unique per envelope (otherwise repeated calls would collide
+  // on the same default-named core).
   async pack (envId, items = []) {
     if (!items.length) return []
-    const drive = new Hyperdrive(this.store)
+    const ns = this.store.namespace('pearpost-drive:' + envId + ':' + Math.random().toString(36).slice(2))
+    const drive = new Hyperdrive(ns)
     await drive.ready()
     const out = []
     for (const it of items) {
@@ -51,8 +55,18 @@ export class Attachments {
     return drive
   }
 
+  // Read a single file from a received attachment. Hyperdrive's metadata
+  // and content cores are advertised over the existing corestore replication
+  // stream, but the muxer needs a brief findingPeers window for the request
+  // to register; otherwise core.length stays 0 and .get() blocks.
   async read (item) {
     const drive = await this.follow(item)
+    if (this.store.findingPeers) {
+      const release = this.store.findingPeers()
+      await new Promise(r => setTimeout(r, 600))
+      release()
+    }
+    if (drive.update) await drive.update().catch(() => {})
     return drive.get('/' + item.name)
   }
 

@@ -111,10 +111,16 @@ export class Inbox extends EventEmitter {
       if (!result.ok) continue
       const beeKey = recordKey(env)
       const record = { env, body: result.body }
-      await this.bee.put(beeKey, b4a.from(JSON.stringify(record)))
-      if (env.attach?.length && this.attachments) {
-        this.attachments.materialize(env).catch(() => {})
+      try {
+        await this.bee.put(beeKey, b4a.from(JSON.stringify(record)))
+      } catch (err) {
+        // Storage closed mid-drain (process is shutting down) — bail out.
+        if (/closed|closing/i.test(err.message)) return
+        throw err
       }
+      // Drive replication is on-demand via attachments.read(); we don't
+      // pre-open here because hypercore's findingPeers handshake collides
+      // with the metadata-only state we'd be left in.
       this.emit('message', { key: beeKey, ...record })
     }
     await this.cursors.put(hex, b4a.from(String(to)))

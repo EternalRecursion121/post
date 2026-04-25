@@ -81,7 +81,12 @@ export class Agent extends EventEmitter {
 
     this.inbox = await new Inbox(this.store, this.swarm, this.identity, inboxBee, cursorBee).ready()
     this.inbox.on('message', (rec) => this.emit('message', rec))
-    this.inbox.on('error', (err) => this.emit('error', err))
+    this.inbox.on('error', (err) => {
+      // Don't crash the whole agent on background drain errors — the most
+      // common cause is "storage closed" during teardown. Surface to anyone
+      // listening, but never let it bubble unhandled.
+      if (this.listenerCount('error') > 0) this.emit('error', err)
+    })
 
     this.directory = await new Directory(this.identity, contactBee, this.opts.profile || {}).ready()
     this.directory.on('peer', (card) => {

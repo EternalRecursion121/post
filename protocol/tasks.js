@@ -124,10 +124,16 @@ export class Tasks extends EventEmitter {
         delegate: (to, sub) => this.delegate(to, reqEnv.id, sub)
       }
       const result = handler(body.args || {}, ctx)
-      // Async iterator support
+      // Async iterator support: progress yields are sent as-is; the
+      // generator's *return* value (the { value } when done is true) is
+      // the final result. for-await-of would discard the return value, so
+      // walk the iterator manually.
       if (result && typeof result[Symbol.asyncIterator] === 'function') {
         let final
-        for await (const chunk of result) {
+        const it = result[Symbol.asyncIterator]()
+        while (true) {
+          const { value: chunk, done } = await it.next()
+          if (done) { final = chunk; break }
           if (chunk && chunk.status === 'progress') await send(chunk)
           else final = chunk
         }

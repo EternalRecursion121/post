@@ -107,11 +107,97 @@ async function main () {
 
   // ---- 5. signature integrity ----
   await test('forged envelope is rejected at open()', async () => {
-    // We can't easily inject a forged envelope into bob's outbox without his
-    // key, which is the whole point. So just sanity-check Identity.verify.
     const { Identity } = await import('../protocol/identity.js')
     const ok = Identity.verify(Buffer.from('x'), Buffer.alloc(64), Buffer.alloc(32))
     assertEq(ok, false)
+  })
+
+  // ---- 6. attachments ----
+  await test('attachments: sender packs, receiver fetches', async () => {
+    const tmpFile = path.join(TMP, 'note.txt')
+    await fs.writeFile(tmpFile, 'hello attachment')
+    const got = waitFor(bob, 'message', r => r.body?.text === 'see file' && r.env.attach?.length, 8000)
+    await alice.send(bob.pubHex, 'chat', { text: 'see file' }, { attach: [tmpFile] })
+    const rec = await got
+    assertEq(rec.env.attach.length, 1)
+    assertEq(rec.env.attach[0].name, 'note.txt')
+    const buf = await bob.readAttachment(rec.env.attach[0])
+    assertEq(buf.toString(), 'hello attachment')
+  })
+
+  // ---- 7. ack ----
+  await test('ack: direct receipts are auto-acked', async () => {
+    const id = (await alice.send(bob.pubHex, 'chat', { text: 'check ✓' })).id
+    const deadline = Date.now() + 4000
+    while (!alice.ack.isDelivered(id) && Date.now() < deadline) await wait(50)
+    assertEq(alice.ack.isDelivered(id), true)
+  })
+
+  await test('ack: room messages are NOT acked', async () => {
+    const room = await alice.createRoom('no-ack')
+    await bob.joinRoom(room.serialize())
+    const env = await alice.sendRoom(room.id, 'chat', { text: 'silent' })
+    // bob receives the room message but should NOT auto-ack it (room
+    // delivery is many-to-many; an ack flood would be untenable).
+    await wait(800)
+    assertEq(alice.ack.isDelivered(env.id), false)
+  })
+
+  // ---- 8. presence ----
+  await test('presence: peer state surfaces on broadcast', async () => {
+    // Manually trigger one broadcast cycle on alice.
+    const got = waitFor(bob, 'presence', p => p.pubkey === alice.pubHex)
+    await alice.presence.broadcast('online')
+    const p = await got
+    assertEq(p.state, 'online')
+    assertEq(p.pubkey, alice.pubHex)
+    assertEq(bob.presence.classify(alice.pubHex), 'online')
+  })
+
+  // ---- 9. tasks ----
+  await test('tasks: progress + done', async () => {
+    const updates = []
+    bob.on('task', (u) => { if (u.body) updates.push(u.body.status) })
+    bob.registerTask('build', async function * (args, ctx) {
+      yield { status: 'progress', progress: 0.3, note: 'fetched' }
+      yield { status: 'progress', progress: 0.7, note: 'compiled' }
+      return { artefact: args.target + '.bin', size: 42 }
+    })
+    const value = await alice.task(bob.pubHex, { title: 'build', args: { target: 'demo' } })
+    assertEq(value.artefact, 'demo.bin')
+    assertEq(value.size, 42)
+  })
+
+  await test('tasks: errors surface as rejections', async () => {
+    bob.registerTask('crash', async () => { throw new Error('boom') })
+    let caught
+    try { await alice.task(bob.pubHex, { title: 'crash' }) } catch (e) { caught = e }
+    assertEq(!!caught, true)
+    assertEq(/boom/.test(caught.message), true)
+  })
+
+  await test('tasks: subtask delegation forms a DAG', async () => {
+    const carol = await spawn('carol')
+    const sac = alice.store.replicate(true)
+    const sca = carol.store.replicate(false)
+    sac.pipe(sca).pipe(sac)
+    const sbc = bob.store.replicate(true)
+    const scb = carol.store.replicate(false)
+    sbc.pipe(scb).pipe(sbc)
+    await alice.addContact(carol.address, 'carol')
+    await carol.addContact(alice.address, 'alice')
+    await bob.addContact(carol.address, 'carol')
+    await carol.addContact(bob.address, 'bob')
+    await wait(300)
+
+    carol.registerTask('half', async (args) => ({ half: args.n / 2 }))
+    bob.registerTask('compute', async (args, ctx) => {
+      const halved = await ctx.delegate(carol.pubHex, { title: 'half', args: { n: args.n } })
+      return { result: halved.half + 1 }
+    })
+    const value = await alice.task(bob.pubHex, { title: 'compute', args: { n: 10 } })
+    assertEq(value.result, 6)
+    await carol.stop()
   })
 
   await alice.stop()
