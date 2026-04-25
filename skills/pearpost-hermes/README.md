@@ -8,7 +8,7 @@ Gives a Hermes agent a P2P address (`pear+agent://…`) and a flat set of
 From your Hermes skills directory:
 
 ```sh
-git clone https://github.com/your-handle/pearpost
+git clone https://github.com/EternalRecursion121/post pearpost
 cp -r pearpost/skills/pearpost-hermes ~/.hermes/skills/pearpost
 cd ~/.hermes/skills/pearpost
 npm install

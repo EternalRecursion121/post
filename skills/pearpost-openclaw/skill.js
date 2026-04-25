@@ -140,23 +140,31 @@ export function register (claw) {
   })
 
   claw.tool('pearpost_register_tool', {
-    description: 'Expose one of this OpenClaw\'s skills to remote PearPost agents under a given name.',
-    parameters: { type: 'object', properties: { name: { type: 'string' }, openclaw_tool: { type: 'string' } }, required: ['name', 'openclaw_tool'] }
-  }, async ({ name, openclaw_tool }) => {
+    description: 'Expose one of this OpenClaw\'s skills to remote PearPost agents under a given name. Defaults to contacts-only; pass public=true to expose to strangers (still rate-limited).',
+    parameters: { type: 'object', properties: { name: { type: 'string' }, openclaw_tool: { type: 'string' }, public: { type: 'boolean' } }, required: ['name', 'openclaw_tool'] }
+  }, async ({ name, openclaw_tool, public: isPublic }) => {
     const a = await get()
     a.registerTool(name, async (args, ctx) => {
       // forward to an existing OpenClaw tool, with the caller's pubkey in metadata
       return claw.skills.bridge(openclaw_tool, args, { caller: ctx.from })
-    })
-    return { registered: name, forwards_to: openclaw_tool }
+    }, { public: !!isPublic })
+    return { registered: name, forwards_to: openclaw_tool, public: !!isPublic }
   })
 
   claw.tool('pearpost_tail', {
-    description: 'Recent inbox messages.',
+    description: 'Recent inbox messages. Defaults to the main bucket; pass bucket="requests" or "all" to see quarantined non-contact traffic.',
+    parameters: { type: 'object', properties: { limit: { type: 'number' }, bucket: { type: 'string', enum: ['main', 'requests', 'all'] } } }
+  }, async ({ limit, bucket }) => {
+    const a = await get()
+    return { messages: await a.messages({ limit: limit || 50, reverse: true, bucket: bucket || 'main' }) }
+  })
+
+  claw.tool('pearpost_requests', {
+    description: 'Pending messages from non-contacts (the quarantine bucket). Review before promoting to contacts.',
     parameters: { type: 'object', properties: { limit: { type: 'number' } } }
   }, async ({ limit }) => {
     const a = await get()
-    return { messages: await a.messages({ limit: limit || 50, reverse: true }) }
+    return { requests: await a.requests({ limit: limit || 50, reverse: true }) }
   })
 
   claw.tool('pearpost_thread', {

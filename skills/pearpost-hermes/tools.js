@@ -147,16 +147,17 @@ export const tools = [
 
   {
     name: 'pearpost.register_tool',
-    description: 'Expose one of this Hermes agent\'s skills/tools to remote PearPost agents under a given name.',
+    description: 'Expose one of this Hermes agent\'s skills/tools to remote PearPost agents under a given name. By default contacts-only; pass public=true to allow strangers (still rate-limited).',
     parameters: {
       type: 'object',
       properties: {
         name: { type: 'string', description: 'name remote agents will call' },
-        hermes_tool: { type: 'string', description: 'name of the local Hermes tool to forward to' }
+        hermes_tool: { type: 'string', description: 'name of the local Hermes tool to forward to' },
+        public: { type: 'boolean', description: 'expose to non-contacts (default: false)' }
       },
       required: ['name', 'hermes_tool']
     },
-    async handler ({ name, hermes_tool }, ctx) {
+    async handler ({ name, hermes_tool, public: isPublic }, ctx) {
       const a = await agent()
       a.registerTool(name, async (args) => {
         // ctx.host is provided by the Hermes runtime when invoking a skill.
@@ -164,21 +165,37 @@ export const tools = [
           throw new Error('host runtime did not provide invokeTool — cannot forward')
         }
         return ctx.host.invokeTool(hermes_tool, args)
-      })
-      return { registered: name, forwards_to: hermes_tool }
+      }, { public: !!isPublic })
+      return { registered: name, forwards_to: hermes_tool, public: !!isPublic }
     }
   },
 
   {
     name: 'pearpost.tail',
-    description: 'Return the most recent N inbox messages.',
+    description: 'Return the most recent N inbox messages from the main bucket. Pass bucket="requests" to view quarantined messages from non-contacts, or "all" for both.',
+    parameters: {
+      type: 'object',
+      properties: {
+        limit: { type: 'number', default: 50 },
+        bucket: { type: 'string', enum: ['main', 'requests', 'all'], default: 'main' }
+      }
+    },
+    async handler ({ limit, bucket }) {
+      const a = await agent()
+      return { messages: await a.messages({ limit: limit || 50, reverse: true, bucket: bucket || 'main' }) }
+    }
+  },
+
+  {
+    name: 'pearpost.requests',
+    description: 'Pending messages from non-contacts (the quarantine bucket). Review here before adding the peer to contacts.',
     parameters: {
       type: 'object',
       properties: { limit: { type: 'number', default: 50 } }
     },
     async handler ({ limit }) {
       const a = await agent()
-      return { messages: await a.messages({ limit: limit || 50, reverse: true }) }
+      return { requests: await a.requests({ limit: limit || 50, reverse: true }) }
     }
   },
 

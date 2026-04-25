@@ -130,6 +130,15 @@ export class Directory extends EventEmitter {
     // Skip peers we've explicitly blocked — otherwise gossip would
     // resurrect every contact we delete.
     if (await this.isBlocked(card.pubkey)) return
+    // Preserve a previously-set `manual` flag so a gossip echo doesn't
+    // demote a peer the user explicitly added.
+    const existing = await this.bee.get(card.pubkey).catch(() => null)
+    if (existing) {
+      try {
+        const prev = JSON.parse(b4a.toString(existing.value))
+        if (prev.manual) card.manual = true
+      } catch {}
+    }
     try {
       await this.bee.put(card.pubkey, b4a.from(JSON.stringify(card)))
       this.emit('peer', card)
@@ -146,9 +155,13 @@ export class Directory extends EventEmitter {
 
   async addManual (card) {
     // Add a contact discovered out-of-band (e.g. via paste of pear+agent://).
-    // No signature required — caller vouches.
-    await this.bee.put(card.pubkey, b4a.from(JSON.stringify(card)))
-    this.emit('peer', card)
+    // No signature required — caller vouches. The `manual: true` flag
+    // distinguishes user-promoted contacts from peers gossip happened to
+    // surface; the abuse layer uses this for the contacts-only invoke
+    // gate and the request-bucket quarantine.
+    const stamped = { ...card, manual: true }
+    await this.bee.put(card.pubkey, b4a.from(JSON.stringify(stamped)))
+    this.emit('peer', stamped)
   }
 }
 

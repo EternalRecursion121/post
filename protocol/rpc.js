@@ -4,24 +4,36 @@
 //
 // Server side: register handlers keyed by tool name. When a tool.invoke
 // arrives addressed to us, run the handler and send back tool.result.
+//
+// By default, only contacts can call a registered tool. Pass
+// { public: true } at register time to expose a tool to strangers (the
+// MCP protocol handlers, for example, are registered public — MCP has
+// its own per-peer allowlist on top).
 import { EventEmitter } from 'events'
 
 export class RPC extends EventEmitter {
-  constructor (outbox, inbox) {
+  constructor (outbox, inbox, opts = {}) {
     super()
     this.outbox = outbox
     this.inbox = inbox
-    this.handlers = new Map()  // name -> async (args, ctx) => value
+    this.handlers = new Map()  // name -> { handler, public }
     this.pending = new Map()   // requestId -> { resolve, reject, timer }
+    // Caller decides who counts as a contact. Default-deny (no contacts)
+    // is wrong for direct-API users; the Agent layer wires this to the
+    // directory.
+    this.isContact = opts.isContact || (() => true)
 
     this.inbox.on('message', (rec) => this._onMessage(rec))
   }
 
-  // Server: register a callable tool.
-  register (name, handler) {
-    this.handlers.set(name, handler)
+  // Server: register a callable tool. opts.public=true exposes it to
+  // strangers (otherwise: contacts-only).
+  register (name, handler, opts = {}) {
+    this.handlers.set(name, { handler, public: !!opts.public })
     return this
   }
+
+  isPublic (name) { return !!this.handlers.get(name)?.public }
 
   tools () { return [...this.handlers.keys()] }
 
@@ -58,13 +70,15 @@ export class RPC extends EventEmitter {
       return
     }
     if (env.type === 'tool.invoke') {
-      const handler = this.handlers.get(body.name)
+      const entry = this.handlers.get(body.name)
       let result
-      if (!handler) {
+      if (!entry) {
         result = { ok: false, error: 'no such tool: ' + body.name }
+      } else if (!entry.public && !(await this.isContact(env.from))) {
+        result = { ok: false, error: 'not authorized: contacts-only tool' }
       } else {
         try {
-          const value = await handler(body.args, { from: env.from, env })
+          const value = await entry.handler(body.args, { from: env.from, env })
           result = { ok: true, value }
         } catch (e) {
           result = { ok: false, error: e.message || String(e) }
