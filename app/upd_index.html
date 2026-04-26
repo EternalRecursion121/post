@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>BotCom — P2P Travel Agents</title>
+  <link rel="stylesheet" href="/upd_style.css" />
+</head>
+<body>
+  <div id="root">
+    <div id="top-strip">
+      <span class="logo"><span class="logo-bot">BOT</span><span class="logo-com">COM</span></span>
+      <span class="logo-tag">Skyscanner travel agent</span>
+      <span class="me-alias" id="me-alias">…</span>
+      <span class="me-addr" id="me-addr" title="click to copy"></span>
+      <span class="me-caps" id="me-caps"></span>
+      <span class="spacer"></span>
+      <span class="dht" id="dht-status" title="Pears P2P network status">
+        <i class="dot"></i><span class="lbl">connecting…</span>
+      </span>
+      <span class="sep">┃</span>
+      <span class="clock" id="clock">--:--:-- UTC</span>
+      <span class="sep">┃</span>
+      <span class="tasks-pill" id="tasks-pill" title="active explorations">
+        EXPLORING <span class="n" id="tasks-n">0</span>
+      </span>
+    </div>
+
+    <aside id="left-rail">
+      <div class="section">
+        <div class="section-h">AGENTS <span class="count" id="contacts-count">0</span></div>
+        <ul class="row-list" id="contacts"></ul>
+      </div>
+      <div class="section">
+        <div class="section-h">DESTINATIONS <span class="count" id="rooms-count">0</span></div>
+        <ul class="row-list" id="rooms"></ul>
+      </div>
+      <div class="section">
+        <div class="section-h">EXPLORATIONS <span class="count" id="tasks-count">0</span></div>
+        <ul class="row-list" id="task-tray"></ul>
+      </div>
+    </aside>
+
+    <main id="main">
+      <div id="main-bg-overlay"></div>
+      <canvas id="graph"></canvas>
+      <div id="graph-filters">
+        <button class="chip on chat"     data-filter="chat">chat</button>
+        <button class="chip on tool"     data-filter="tool">tool</button>
+        <button class="chip on task"     data-filter="task">explore</button>
+        <button class="chip on presence" data-filter="presence">signal</button>
+      </div>
+      <div id="graph-legend">
+        <span class="you"><i class="swatch"></i>you</span>
+        <span class="peer"><i class="swatch"></i>agent</span>
+        <span class="room"><i class="swatch"></i>destination</span>
+      </div>
+      <div id="edge-tooltip"></div>
+    </main>
+
+    <aside id="right-sheet"></aside>
+
+    <div id="hint-bar">
+      <span class="hint-brand">powered by <b>Pears</b> P2P</span>
+      <span class="hint-sep">┃</span>
+      <span><span class="k">⌘K</span>command</span>
+      <span><span class="k">↵</span>open</span>
+      <span><span class="k">⇧↵</span>agent</span>
+      <span><span class="k">⌘↵</span>send</span>
+      <span><span class="k">R</span>reply</span>
+      <span><span class="k">Esc</span>back</span>
+    </div>
+  </div>
+
+  <div id="toast-host"></div>
+
+  <script type="module" src="/upd_app.js"></script>
+</body>
+</html>
