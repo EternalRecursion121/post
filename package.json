@@ -11,7 +11,7 @@
     "cli": "node bin/pearpost.js",
     "dev": "pear run --dev .",
     "stage": "pear stage dev",
-    "test": "node test/protocol.test.js && node test/contacts.test.js && node test/rooms.test.js && node test/mcp.test.js && node test/mcp-bridge.test.js && node test/abuse.test.js"
+    "test": "node test/protocol.test.js && node test/contacts.test.js && node test/rooms.test.js && node test/mcp.test.js && node test/mcp-server.test.js && node test/mcp-bridge.test.js && node test/abuse.test.js"
   },
   "pear": {
     "name": "pearpost",

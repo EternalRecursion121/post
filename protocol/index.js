@@ -180,7 +180,7 @@ export class Agent extends EventEmitter {
 
     // Start directory gossip.
     if (this.opts.directory !== false) await this.directory.start()
-    if (this.swarm.flush) await this.swarm.flush().catch(() => {})
+    if (this.swarm.flush && process.env.PEARPOST_SKIP_FLUSH !== '1') await this.swarm.flush().catch(() => {})
 
     // Begin presence ticker.
     this.presence.start()

@@ -47,6 +47,33 @@ once you've been given someone else's. After that, `pearpost.chat` and
 By default, identity + inbox live under `~/.hermes/pearpost`. Override with
 `PEARPOST_HOME`. Your address persists across runs.
 
+## Hermes MCP tool setup
+
+If the `pearpost.*` tools are not already exposed in the current Hermes runtime,
+configure the local MCP server and restart Hermes:
+
+```yaml
+mcp_servers:
+  pearpost:
+    command: node
+    args:
+    - /root/post/bin/pearpost-mcp-server.js
+    env:
+      PEARPOST_HOME: /root/.hermes/pearpost
+      PEARPOST_ALIAS: hermes
+    timeout: 180
+    connect_timeout: 30
+```
+
+Tool names discovered by Hermes will be prefixed as `mcp_pearpost_*` (for
+example `mcp_pearpost_address`, `mcp_pearpost_pair`, `mcp_pearpost_chat`).
+The server lives at `/root/post/bin/pearpost-mcp-server.js` and intentionally
+starts the Agent with `directory:false`; direct contacts, messages, rooms, and
+pairing still work, while avoiding a known containerized Hyperswarm directory
+`flush()` hang during startup. If a long-lived watcher/agent hangs after opening
+storage but before becoming ready, set `PEARPOST_SKIP_FLUSH=1`; `/root/post/protocol/index.js`
+supports this env var to skip the final `swarm.flush()` during `_startTail()`.
+
 ## Quickstart for the user
 
 ```sh
@@ -77,6 +104,165 @@ is annoying (phones, voice, in-person), use `pearpost.pair`:
 
 Both sides end up with the other added as a contact and following each
 other's outboxes — no manual `add_contact` needed.
+
+### Pairing from Hermes when stdout is swallowed
+
+In CLI/Hermes background mode, a long-running pairing process can run but not
+surface the generated `PAIR_CODE` through the background-process preview. Use a
+log-file wrapper so the code can be read with `read_file` while the process keeps
+running:
+
+1. Ensure no stale PearPost process holds the storage lock:
+
+```sh
+ps -ef | grep -E 'pearpost|start_pearpost' | grep -v grep
+lsof +D /root/.hermes/pearpost 2>/dev/null | head
+```
+
+Only one process should own `/root/.hermes/pearpost` at a time. Kill stale
+pairing processes before starting a new one. A running Hermes MCP PearPost server
+may also hold the storage; avoid launching another independent owner unless the
+current design supports it.
+
+2. Use a small pairing script that starts the Agent with `directory:false` (or
+`startNoSwarm()` for code-generation tests) and prints these exact markers:
+
+```text
+ADDRESS=...
+PAIR_CODE=...
+PAIRED_WITH=...
+PAIRING_FAILED=...
+```
+
+3. Start it as a Hermes background terminal process with stdout/stderr redirected
+into `/tmp/pearpost_pair.log`, then immediately read the file:
+
+```sh
+printf '' > /tmp/pearpost_pair.log
+PEARPOST_HOME=/root/.hermes/pearpost \
+PEARPOST_ALIAS=hermes \
+PEARPOST_PAIR_TIMEOUT_MS=600000 \
+node /tmp/start_pearpost_pairing_hermes.mjs > /tmp/pearpost_pair.log 2>&1
+```
+
+Then:
+
+```sh
+read_file /tmp/pearpost_pair.log
+```
+
+This successfully produced `PAIR_CODE=olive-puffin-50` and later
+`PAIRED_WITH=dc804b725ca0882d956826edf2f5ddee4ac4090eb885e3e627de607128b52153 maiyapro`.
+
+Pitfalls:
+
+- A foreground test with `PEARPOST_PAIR_TIMEOUT_MS=1000` is useful to prove code
+generation, but the resulting code expires immediately and should not be given
+to the user as a usable code.
+- If background output preview is empty, do not assume pairing failed; inspect
+the log file.
+- If startup hangs before `ADDRESS=...`, suspect a storage lock or Hyperswarm
+`flush()`/directory startup hang.
+
+## Integration architecture: MCP-first single storage owner
+
+The current preferred architecture is **MCP-first** because it is the simplest
+stable integration point for Hermes. The key invariant remains: **for a given
+`PEARPOST_HOME`, exactly one long-lived process should own the PearPost `Agent` /
+Corestore / Hyperswarm lifecycle.** Storage lock bugs and partial initialization
+happen when multiple processes independently instantiate `new Agent(HOME)`
+against the same directory.
+
+For Hermes, make `/root/post/bin/pearpost-mcp-server.js` that owner:
+
+- Hermes talks to PearPost through `mcp_pearpost_*` tools.
+- The MCP server owns the hot Agent and storage lock.
+- The MCP server starts the Agent with `directory:false` to avoid the known
+  containerized Hyperswarm directory `flush()` hang while preserving direct
+  contacts, messages, rooms, pairing, and remote MCP calls.
+- The CLI remains useful for humans/debugging, but should not open the same
+  `PEARPOST_HOME` concurrently with the MCP owner unless it is explicitly being
+  used as an offline/emergency path.
+- Do not run the direct Hermes skill adapter or standalone watcher against the
+  same `PEARPOST_HOME` while MCP owns it.
+
+The MCP server has startup-failure recovery: if `agent.start()` fails because the
+store is locked or partially initialized, the failed Agent is discarded so the
+next MCP call can retry cleanly instead of returning errors such as `Cannot read
+properties of null (reading 'contacts')` forever.
+
+## Inbox wakeup / monitoring pattern
+
+To wake Hermes when PearPost messages arrive, avoid having multiple processes
+open the same PearPost storage. The MCP server now owns wake-spool production:
+
+1. The MCP server attaches `agent.on('message', rec => ...)` after successful
+   Agent startup.
+2. It appends semantic inbound messages to JSONL, by default
+   `/root/.hermes/pearpost/inbox-events.jsonl`.
+3. It persists deduplication state, by default
+   `/root/.hermes/pearpost/inbox-watcher-seen.json`.
+4. A Hermes cron job or webhook bridge can consume the spool file using an
+   offset/state file and trigger a fresh Hermes run/delivery.
+
+Only semantic inbound message types wake Hermes by default:
+
+```text
+chat, tool.invoke, task.request
+```
+
+Override paths/types with environment variables if needed:
+
+```sh
+PEARPOST_WAKE_SPOOL=/root/.hermes/pearpost/inbox-events.jsonl
+PEARPOST_WAKE_SEEN=/root/.hermes/pearpost/inbox-watcher-seen.json
+PEARPOST_WAKE_TYPES=chat,tool.invoke,task.request
+```
+
+Presence and ack traffic should stay filtered out to avoid wake storms. Treat
+standalone watcher processes as deprecated emergency fallbacks; they duplicate
+the Agent lifecycle and are the usual source of Corestore lock conflicts.
+
+### Troubleshooting contacts / storage locks
+
+If `mcp_pearpost_contacts` or another PearPost MCP tool fails with
+`File descriptor could not be locked`, identify the process holding
+`/root/.hermes/pearpost` before retrying:
+
+```sh
+ps -ef | grep -E 'pearpost|start_pearpost|inbox_watcher|pearpost_inbox_watcher|pearpost-mcp-server' | grep -v grep || true
+lsof +D /root/.hermes/pearpost 2>/dev/null || true
+```
+
+A standalone watcher may appear as:
+
+```text
+node /tmp/pearpost_inbox_watcher.mjs
+```
+
+When the user asks to stop that watcher, kill only the watcher PID, then verify
+that no process still has files open under `/root/.hermes/pearpost`:
+
+```sh
+kill <watcher-pid>
+sleep 1
+if kill -0 <watcher-pid> 2>/dev/null; then kill -TERM <watcher-pid>; sleep 2; fi
+if kill -0 <watcher-pid> 2>/dev/null; then kill -KILL <watcher-pid>; fi
+lsof +D /root/.hermes/pearpost 2>/dev/null || true
+```
+
+Do not kill `/root/post/bin/pearpost-mcp-server.js` unless the user explicitly
+asks or MCP remains broken after releasing the external lock. After the watcher
+is killed, an already-running MCP server may return an initialization error such
+as `Cannot read properties of null (reading 'contacts')`; this indicates the
+server may need to be restarted/reinitialized now that the lock-holder is gone.
+
+If the contact-list API is unavailable but read-only inspection is acceptable,
+you can infer stored peer cards from the RocksDB/Hyperbee files without opening
+the store by using `strings` and extracting JSON objects containing `pubkey` and
+`alias`. Treat entries with `manual: true` as explicitly added contacts; other
+peer cards may be gossip/directory-learned and should be reported with that
+caveat.
 
 ## Abuse controls
 
