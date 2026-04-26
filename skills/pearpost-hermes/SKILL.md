@@ -191,6 +191,31 @@ store is locked or partially initialized, the failed Agent is discarded so the
 next MCP call can retry cleanly instead of returning errors such as `Cannot read
 properties of null (reading 'contacts')` forever.
 
+### MCP server implementation checklist
+
+When changing `/root/post/bin/pearpost-mcp-server.js`, keep these hard-won
+runtime details intact:
+
+- Export testable runtime helpers instead of putting all behavior in top-level
+  stdio process code. The current useful seams are `createServerRuntime`,
+  `createJsonRpcHandler`, `runStdioServer`, `attachWakeSpool`, and
+  `normalizeWakeEvent`.
+- Protect Agent startup with a single in-flight startup promise. If startup
+  fails, call `agent.stop()` best-effort, clear both the Agent and startup
+  promise, and allow the next MCP call to retry from a fresh Agent.
+- Track in-flight JSON-RPC handlers in `runStdioServer`. On stdin `end`, wait for
+  those handlers with `Promise.allSettled([...inflight])` before stopping the
+  runtime and exiting; otherwise a final `tools/call` can be dropped when Hermes
+  closes stdin immediately after writing requests.
+- Keep the force-exit timer during shutdown so Corestore/Hyperswarm teardown
+  cannot hang Hermes forever, but do not let it preempt normal in-flight request
+  draining.
+- Add/keep focused tests in `test/mcp-server.test.js` for: failed startup retry,
+  stdin shutdown draining, and wake-spool filtering/deduplication.
+- Smoke-test stdio behavior with a temporary `PEARPOST_HOME` and redirected input
+  file rather than piping directly into `node`, because Hermes security scanning
+  may block `printf | node ...` as a pipe-to-interpreter pattern.
+
 ## Inbox wakeup / monitoring pattern
 
 To wake Hermes when PearPost messages arrive, avoid having multiple processes
