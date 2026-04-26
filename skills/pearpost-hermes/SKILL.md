@@ -289,6 +289,57 @@ the store by using `strings` and extracting JSON objects containing `pubkey` and
 peer cards may be gossip/directory-learned and should be reported with that
 caveat.
 
+### Checking messages when MCP is stale/unreachable
+
+If the user asks to check PearPost messages, prefer `mcp_pearpost_tail({ bucket:
+"all", limit: N })`. If the MCP tool fails with stale-runtime errors such as
+`Cannot read properties of null (reading 'list')`, `ClosedResourceError`, or an
+auto-retry backoff warning:
+
+1. Inspect process/lock state first:
+
+```sh
+ps -ef | grep -E 'pearpost|pearpost-mcp-server|inbox_watcher|start_pearpost' | grep -v grep || true
+lsof +D /root/.hermes/pearpost 2>/dev/null || true
+```
+
+2. If an old `/root/post/bin/pearpost-mcp-server.js` process predates recent MCP
+   server fixes or is returning poisoned-state errors, kill only that stale MCP
+   process, then re-check that no process holds `/root/.hermes/pearpost`. Do not
+   keep retrying the MCP tool during Hermes' MCP auto-backoff window.
+
+3. As a fallback, run a one-shot direct Agent inspection with the same storage,
+   `directory:false`, and `PEARPOST_SKIP_FLUSH=1`, then stop the Agent promptly:
+
+```js
+import { Agent } from '/root/post/protocol/index.js'
+const agent = new Agent('/root/.hermes/pearpost', { profile: { alias: 'hermes' }, directory: false })
+await agent.start()
+try {
+  const msgs = await agent.messages({ limit: 200, reverse: true, bucket: 'all' })
+  const semantic = msgs.filter(r => !['presence', 'ack'].includes(r?.env?.type))
+  console.log(JSON.stringify(semantic.map(r => ({
+    key: r.key,
+    bucket: r.bucket || 'main',
+    id: r.env?.id,
+    time: r.env?.ts ? new Date(r.env.ts).toISOString() : null,
+    from: r.env?.from,
+    to: r.env?.to,
+    type: r.env?.type,
+    inReplyTo: r.env?.inReplyTo,
+    body: r.body || r.env?.body
+  })), null, 2))
+} finally {
+  await agent.stop()
+}
+```
+
+Report semantic messages (`chat`, `tool.invoke`, `task.request`, etc.) separately
+from noisy `presence`/`ack` traffic. Also check `agent.requests({ limit: N,
+reverse: true })` or `pearpost requests N` for quarantine. When mapping sender
+aliases, distinguish manual contacts from gossip-learned peer cards if the same
+alias appears under multiple pubkeys.
+
 ## Abuse controls
 
 PearPost ships sensible spam/abuse defaults out of the box. Behaviour
