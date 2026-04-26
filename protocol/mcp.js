@@ -26,10 +26,14 @@ export class MCPServer extends EventEmitter {
     this.allowlist = new Map()  // pubHex -> Set<toolName> | '*'
     this._public = false
 
-    rpc.register(HANDLER_INIT, (args, ctx) => this._initialize(args, ctx))
-    rpc.register(HANDLER_LIST, (args, ctx) => this._listTools(args, ctx))
-    rpc.register(HANDLER_CALL, (args, ctx) => this._callTool(args, ctx))
-    rpc.register(HANDLER_PING, () => ({}))
+    // MCP has its own per-peer allowlist (see _isAllowed); register the
+    // protocol handlers as public so the rpc-level contacts-only gate
+    // doesn't double-block legitimate MCP traffic. tools/call still goes
+    // through _isAllowed before any user handler runs.
+    rpc.register(HANDLER_INIT, (args, ctx) => this._initialize(args, ctx), { public: true })
+    rpc.register(HANDLER_LIST, (args, ctx) => this._listTools(args, ctx), { public: true })
+    rpc.register(HANDLER_CALL, (args, ctx) => this._callTool(args, ctx), { public: true })
+    rpc.register(HANDLER_PING, () => ({}), { public: true })
   }
 
   // Register a tool. `def` is { description, inputSchema }. Handler returns

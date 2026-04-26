@@ -1,9 +1,17 @@
 // Rooms.
 //
-// A room is a shared 32-byte secret. Anyone holding it can read and write
-// to the room. Each member writes a room message into THEIR OWN outbox
-// (envelope.to = `room:<roomId>`); other members, on replicating that
-// outbox, decrypt and materialise the envelope into their inbox bee.
+// A room is a 32-byte shared SECRET KEY held by every member. From that key
+// we derive a public ROOM ID = blake2b(key) which is what appears on the
+// wire as `to: "room:<idHex>"`. The id is fine to leak — it lets peers
+// filter envelopes for rooms they care about — but the *key* never appears
+// on the wire and is required to decrypt room bodies (see envelope.js +
+// agent.sendRoom). Anyone who sees only the outbox stream cannot read the
+// room.
+//
+// Each member writes a room message into THEIR OWN outbox (envelope.to =
+// `room:<roomId>`); other members, on replicating that outbox, decrypt
+// (using the shared room key) and materialise the envelope into their
+// inbox bee.
 //
 // "Linearization" is a deterministic local merge: sort by (env.ts, env.id)
 // over all envelopes addressed to this room. Because every member's outbox
@@ -23,25 +31,45 @@ import sodium from 'sodium-native'
 export class Room {
   constructor (key, opts = {}) {
     this.key = b4a.isBuffer(key) ? key : b4a.from(key, 'hex')
+    if (this.key.length !== 32) throw new Error('room key must be 32 bytes')
     this.name = opts.name || ''
+    // Members are pubHex strings of peers known to be in this room. The
+    // share string carries them so a joiner can auto-follow each member's
+    // outbox; without that, the joiner has the room key but no way to
+    // *receive* room messages (each member's room envelopes ride their
+    // own outbox). The list is advisory — anyone with the key is "in",
+    // and the list will lag behind reality, but it's enough to bootstrap.
+    this.members = Array.isArray(opts.members) ? [...opts.members] : []
+    const idBuf = b4a.alloc(32)
+    sodium.crypto_generichash(idBuf, this.key)
+    this._idHex = b4a.toString(idBuf, 'hex')
   }
 
-  get id () { return b4a.toString(this.key, 'hex') }
-  get to () { return 'room:' + this.id }
+  get id () { return this._idHex }
+  get keyHex () { return b4a.toString(this.key, 'hex') }
+  get to () { return 'room:' + this._idHex }
 
-  static create (name = '') {
+  addMember (pubHex) {
+    if (!pubHex || this.members.includes(pubHex)) return false
+    this.members.push(pubHex)
+    return true
+  }
+
+  static create (name = '', opts = {}) {
     const k = b4a.alloc(32)
     sodium.randombytes_buf(k)
-    return new Room(k, { name })
+    return new Room(k, { name, members: opts.members })
   }
 
   serialize () {
-    return JSON.stringify({ key: this.id, name: this.name })
+    const o = { key: this.keyHex, name: this.name }
+    if (this.members.length) o.members = this.members
+    return JSON.stringify(o)
   }
 
   static deserialize (s) {
     const o = JSON.parse(s)
-    return new Room(o.key, { name: o.name })
+    return new Room(o.key, { name: o.name, members: o.members })
   }
 }
 

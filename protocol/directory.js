@@ -22,16 +22,50 @@ function topicFor (label) {
 //
 // Sig is over canonical JSON of {pubkey, alias, blurb, capabilities, ts}.
 export class Directory extends EventEmitter {
-  constructor (identity, contactsBee, profile = {}) {
+  constructor (identity, contactsBee, profile = {}, blockBee = null) {
     super()
     this.identity = identity
     this.bee = contactsBee
+    this.blockBee = blockBee    // Hyperbee — pubHex -> '1' for blocked peers
     this.profile = profile      // { alias, blurb, capabilities }
     this.swarm = null
     this._topic = topicFor(TOPIC_LABEL)
   }
 
-  async ready () { await this.bee.ready(); return this }
+  async ready () {
+    await this.bee.ready()
+    if (this.blockBee) await this.blockBee.ready()
+    return this
+  }
+
+  async isBlocked (pubHex) {
+    if (!this.blockBee) return false
+    const v = await this.blockBee.get(pubHex)
+    return !!v
+  }
+
+  async block (pubHex) {
+    if (!this.blockBee) return
+    await this.blockBee.put(pubHex, b4a.from('1'))
+  }
+
+  async unblock (pubHex) {
+    if (!this.blockBee) return
+    await this.blockBee.del(pubHex)
+  }
+
+  async blockedList () {
+    if (!this.blockBee) return []
+    const out = []
+    for await (const { key } of this.blockBee.createReadStream()) {
+      out.push(b4a.toString(key))
+    }
+    return out
+  }
+
+  async remove (pubHex) {
+    await this.bee.del(pubHex)
+  }
 
   async start () {
     if (this.swarm) return
@@ -80,7 +114,7 @@ export class Directory extends EventEmitter {
     setTimeout(() => conn.end(), 2000).unref()
   }
 
-  _ingest (line) {
+  async _ingest (line) {
     let card
     try { card = JSON.parse(line) } catch { return }
     if (!card.pubkey || !card.sig) return
@@ -93,9 +127,22 @@ export class Directory extends EventEmitter {
     }
     const ok = Identity.verify(canonical(body), b4a.from(card.sig, 'base64'), b4a.from(card.pubkey, 'hex'))
     if (!ok) return
-    this.bee.put(card.pubkey, b4a.from(JSON.stringify(card))).then(() => {
+    // Skip peers we've explicitly blocked — otherwise gossip would
+    // resurrect every contact we delete.
+    if (await this.isBlocked(card.pubkey)) return
+    // Preserve a previously-set `manual` flag so a gossip echo doesn't
+    // demote a peer the user explicitly added.
+    const existing = await this.bee.get(card.pubkey).catch(() => null)
+    if (existing) {
+      try {
+        const prev = JSON.parse(b4a.toString(existing.value))
+        if (prev.manual) card.manual = true
+      } catch {}
+    }
+    try {
+      await this.bee.put(card.pubkey, b4a.from(JSON.stringify(card)))
       this.emit('peer', card)
-    }).catch(() => {})
+    } catch {}
   }
 
   async contacts () {
@@ -108,9 +155,13 @@ export class Directory extends EventEmitter {
 
   async addManual (card) {
     // Add a contact discovered out-of-band (e.g. via paste of pear+agent://).
-    // No signature required — caller vouches.
-    await this.bee.put(card.pubkey, b4a.from(JSON.stringify(card)))
-    this.emit('peer', card)
+    // No signature required — caller vouches. The `manual: true` flag
+    // distinguishes user-promoted contacts from peers gossip happened to
+    // surface; the abuse layer uses this for the contacts-only invoke
+    // gate and the request-bucket quarantine.
+    const stamped = { ...card, manual: true }
+    await this.bee.put(card.pubkey, b4a.from(JSON.stringify(stamped)))
+    this.emit('peer', stamped)
   }
 }
 

@@ -21,12 +21,15 @@ import { Presence } from './presence.js'
 import { Ack } from './ack.js'
 import { Tasks } from './tasks.js'
 import { MCPServer, MCPClient } from './mcp.js'
+import { Pairing, generateCode } from './pairing.js'
+import { AbuseGuard, loadAbuseConfig } from './abuse.js'
 import { seal as sealEnvelope, open as openEnvelope } from './envelope.js'
 
 export { Room } from './rooms.js'
 export { TYPES } from './envelope.js'
 export { pubFromAddress } from './identity.js'
 export { MCPServer, MCPClient, MCP_PROTOCOL_VERSION } from './mcp.js'
+export { generateCode } from './pairing.js'
 
 export class Agent extends EventEmitter {
   constructor (storageDir, opts = {}) {
@@ -40,6 +43,8 @@ export class Agent extends EventEmitter {
     this.inbox = null
     this.directory = null
     this.rpc = null
+    this.abuse = null
+    this._contactSet = new Set() // pubHex of current contacts (for sync checks)
     this._joinedRooms = new Map()  // hex -> Room
   }
 
@@ -79,9 +84,11 @@ export class Agent extends EventEmitter {
     const inboxBee = new Hyperbee(this.store.get({ name: 'inbox' }))
     const cursorBee = new Hyperbee(this.store.get({ name: 'cursors' }))
     const contactBee = new Hyperbee(this.store.get({ name: 'contacts' }))
+    const blockBee = new Hyperbee(this.store.get({ name: 'blocklist' }))
     const roomBee = new Hyperbee(this.store.get({ name: 'rooms' }))
 
     this.inbox = await new Inbox(this.store, this.swarm, this.identity, inboxBee, cursorBee).ready()
+    this.inbox.on('message', (rec) => this._learnRoomMember(rec))
     this.inbox.on('message', (rec) => this.emit('message', rec))
     this.inbox.on('error', (err) => {
       // Don't crash the whole agent on background drain errors — the most
@@ -90,13 +97,34 @@ export class Agent extends EventEmitter {
       if (this.listenerCount('error') > 0) this.emit('error', err)
     })
 
-    this.directory = await new Directory(this.identity, contactBee, this.opts.profile || {}).ready()
+    this.directory = await new Directory(this.identity, contactBee, this.opts.profile || {}, blockBee).ready()
     this.directory.on('peer', (card) => {
+      // Only manually-added peers count as "contacts" for the abuse
+      // layer. Gossip-discovered peers get their outbox followed (so
+      // their messages reach us) but their direct sends land in the
+      // requests quarantine until the user promotes them.
+      if (card.manual) this._contactSet.add(card.pubkey)
       this.inbox.follow(card.pubkey).catch(err => this.emit('error', err))
       this.emit('peer', card)
     })
 
-    this.rpc = new RPC(this.outbox, this.inbox)
+    // Abuse controls: size caps, per-peer rate limiting on non-contacts,
+    // auto-block heuristic. The Inbox runs the guard on inbound chat /
+    // tool.invoke before decrypt and bee.put. The RPC layer uses the same
+    // contact check for the contacts-only invoke gate.
+    const abuseCfg = loadAbuseConfig(process.env, this.opts.abuse || {})
+    this.abuse = new AbuseGuard({
+      config: abuseCfg,
+      isContact: (hex) => this._contactSet.has(hex),
+      isBlocked: (hex) => this.directory.isBlocked(hex),
+      log: this.opts.abuseLog
+    })
+    this.inbox.setGuard(this.abuse)
+    this.inbox.on('rejected', (info) => this._onRejected(info))
+
+    this.rpc = new RPC(this.outbox, this.inbox, {
+      isContact: (hex) => this._contactSet.has(hex)
+    })
     this.rpc.on('error', (err) => this.emit('error', err))
 
     this.attachments = new Attachments(this.store)
@@ -131,17 +159,28 @@ export class Agent extends EventEmitter {
     for await (const { value } of roomBee.createReadStream()) {
       const room = Room.deserialize(b4a.toString(value))
       this._joinedRooms.set(room.id, room)
-      this.inbox.joinRoom(room.id)
+      this.inbox.joinRoom(room.id, room.key)
     }
 
-    // Catch up on existing contacts (follow their outboxes).
+    // Catch up on existing contacts (follow their outboxes). Drop any
+    // entries that were blocked before the blocklist existed so the UI
+    // doesn't keep showing peers the user already removed.
     for (const card of await this.directory.contacts()) {
+      if (await this.directory.isBlocked(card.pubkey)) {
+        await this.directory.remove(card.pubkey).catch(() => {})
+        continue
+      }
+      // Cards stored before the manual-flag distinction existed: treat
+      // as manual (the only way they got there pre-change was either
+      // explicit add or gossip we already trusted enough to accept).
+      const treatAsManual = card.manual !== false
+      if (treatAsManual) this._contactSet.add(card.pubkey)
       await this.inbox.follow(card.pubkey).catch(() => {})
     }
 
     // Start directory gossip.
     if (this.opts.directory !== false) await this.directory.start()
-    if (this.swarm.flush) await this.swarm.flush().catch(() => {})
+    if (this.swarm.flush && process.env.PEARPOST_SKIP_FLUSH !== '1') await this.swarm.flush().catch(() => {})
 
     // Begin presence ticker.
     this.presence.start()
@@ -162,17 +201,111 @@ export class Agent extends EventEmitter {
     try { await this.store.close() } catch {}
   }
 
+  // ---- abuse handling ----
+
+  // Fired by Inbox when an envelope is dropped (blocked/size/rate). We
+  // log via the guard's log; here we may auto-block and/or send a
+  // single rate-limit notice back to the peer.
+  async _onRejected (info) {
+    this.emit('rejected', info)
+    const hex = info.env?.from
+    if (!hex) return
+    if (info.autoBlocked) {
+      try {
+        await this.directory.block(hex)
+        this._contactSet.delete(hex)
+        await this.directory.remove(hex).catch(() => {})
+        await this.inbox.unfollow(hex).catch(() => {})
+      } catch (err) { this.emit('error', err) }
+      return
+    }
+    if (info.notify) {
+      // Best-effort one-shot notice. Don't await so we never block the
+      // drain loop on outbox.append. Failures are logged via the guard.
+      this.outbox.send({
+        to: hex,
+        type: 'chat',
+        body: { text: 'pearpost: rate limit exceeded; messages throttled', _rateLimitNotice: true }
+      }).catch(() => {})
+    }
+  }
+
   // ---- contacts ----
   async addContact (addressOrCard, alias) {
     const card = typeof addressOrCard === 'string'
       ? { pubkey: b4a.toString(pubFromAddress(addressOrCard), 'hex'), alias: alias || '', blurb: '', capabilities: [], ts: Date.now() }
       : addressOrCard
+    // Adding a peer who's on our blocklist would silently fail later
+    // (gossip would re-block them); fail loudly instead.
+    if (await this.directory.isBlocked(card.pubkey)) {
+      throw new Error('contact is blocked: unblock first')
+    }
     await this.directory.addManual(card)
+    this._contactSet.add(card.pubkey)
     await this.inbox.follow(card.pubkey)
+    // Kick the swarm so the DHT lookup actually starts now. Without this,
+    // the topic join we did inside follow() is lazy and the first send/
+    // invoke can sit waiting for the peer to be discovered. flush() is a
+    // best-effort wait for pending DHT ops; we don't fail the add if it
+    // errors (it can fail benignly during teardown or on the noop swarm).
+    if (this.swarm?.flush) await this.swarm.flush().catch(() => {})
     return card
   }
 
   async contacts () { return this.directory.contacts() }
+
+  // Remove a contact and stop following their outbox. By default also adds
+  // to the blocklist so directory gossip won't resurrect them. Pass
+  // { block: false } if you want a "soft" removal that gossip can re-add.
+  async deleteContact (pubHexOrAddress, { block = true } = {}) {
+    const hex = normalizeTo(pubHexOrAddress)
+    if (hex.startsWith('room:')) throw new Error('not a contact: ' + hex)
+    if (block) await this.directory.block(hex)
+    await this.directory.remove(hex)
+    this._contactSet.delete(hex)
+    await this.inbox.unfollow(hex)
+    return { pubkey: hex, blocked: !!block }
+  }
+
+  // ---- pairing ----
+  // Short-code pairing. Either side can initiate. Whichever side calls
+  // without a code receives a generated one (emitted via `code` event and
+  // returned in the resolved value). On success both peers add each other
+  // as contacts and start following each other's outboxes.
+  async pair ({ code, timeout, alias } = {}) {
+    const pairing = new Pairing(this.identity, () => this.directory.card())
+    if (!code) {
+      pairing.once('code', (c) => this.emit('pair-code', c))
+    }
+    const result = await pairing.run({ code, timeout })
+    const peer = result.peer
+    if (peer.pubkey === this.identity.pubHex) {
+      throw new Error('paired with self — use a different code')
+    }
+    if (await this.directory.isBlocked(peer.pubkey)) {
+      throw new Error('peer is blocked: unblock first')
+    }
+    const card = {
+      pubkey: peer.pubkey,
+      alias: alias || peer.alias || '',
+      blurb: peer.blurb || '',
+      capabilities: peer.capabilities || [],
+      ts: peer.ts || Date.now()
+    }
+    await this.directory.addManual(card)
+    this._contactSet.add(card.pubkey)
+    await this.inbox.follow(card.pubkey)
+    if (this.swarm?.flush) await this.swarm.flush().catch(() => {})
+    return { code: result.code, peer: card }
+  }
+
+  async unblockContact (pubHexOrAddress) {
+    const hex = normalizeTo(pubHexOrAddress)
+    await this.directory.unblock(hex)
+    return { pubkey: hex }
+  }
+
+  async blockedContacts () { return this.directory.blockedList() }
 
   // ---- messaging ----
   async send (to, type, body, opts = {}) {
@@ -184,7 +317,10 @@ export class Agent extends EventEmitter {
     const env = await this.outbox.send({ to: dest, type, body, inReplyTo: opts.inReplyTo, attach })
     this.ack.trackOutgoing(env)
     // Mirror into our own inbox so the UI/thread sees what we just sent.
-    await this.inbox.record(env, body)
+    // The wire env has attach=[] for direct messages (drive keys are
+    // sealed inside the ciphertext); restore them on the local copy so
+    // the sender's own UI still shows their attachments.
+    await this.inbox.record({ ...env, attach: attach || [] }, body)
     return env
   }
 
@@ -205,8 +341,10 @@ export class Agent extends EventEmitter {
     return this.rpc.invoke(dest, name, args, opts)
   }
 
-  registerTool (name, handler) {
-    this.rpc.register(name, handler)
+  // Register a callable tool. By default tools are contacts-only — pass
+  // { public: true } to expose to strangers (still subject to rate limits).
+  registerTool (name, handler, opts = {}) {
+    this.rpc.register(name, handler, opts)
     const advertised = new Set(this.directory.profile.capabilities || [])
     advertised.add(name)
     this.directory.setProfile({ capabilities: [...advertised] })
@@ -232,19 +370,56 @@ export class Agent extends EventEmitter {
 
   // ---- rooms ----
   async createRoom (name = '') {
-    const room = Room.create(name)
+    const room = Room.create(name, { members: [this.identity.pubHex] })
     return this._registerRoom(room)
   }
 
   async joinRoom (serialized) {
     const room = Room.deserialize(serialized)
-    return this._registerRoom(room)
+    // Make sure we list ourselves on the local copy — outgoing room
+    // messages re-share the member list, so a third joiner can find us.
+    room.addMember(this.identity.pubHex)
+    await this._registerRoom(room)
+    // Auto-follow every other member so their room messages actually
+    // reach our inbox. The room key alone is useless without the outbox
+    // to read it from.
+    for (const pub of room.members) {
+      if (pub === this.identity.pubHex) continue
+      await this._followRoomMember(pub).catch(err => this.emit('error', err))
+    }
+    return room
+  }
+
+  async _followRoomMember (pubHex) {
+    if (await this.directory.isBlocked(pubHex)) return
+    const existing = (await this.directory.contacts()).find(c => c.pubkey === pubHex)
+    if (!existing) {
+      await this.directory.addManual({
+        pubkey: pubHex, alias: '', blurb: '', capabilities: [], ts: Date.now()
+      })
+    }
+    await this.inbox.follow(pubHex)
+  }
+
+  // Learn members from incoming room traffic. If we see a room message
+  // from someone not yet in our local room.members, fold them in and
+  // re-persist so future shares of room.serialize() carry the larger set.
+  _learnRoomMember (rec) {
+    const env = rec?.env
+    if (!env || !env.to || !env.to.startsWith('room:')) return
+    const id = env.to.slice('room:'.length)
+    const room = this._joinedRooms.get(id)
+    if (!room) return
+    if (!env.from || env.from === this.identity.pubHex) return
+    if (room.addMember(env.from)) {
+      this._roomBee?.put(room.id, b4a.from(room.serialize())).catch(() => {})
+    }
   }
 
   async _registerRoom (room) {
     await this._roomBee.put(room.id, b4a.from(room.serialize()))
     this._joinedRooms.set(room.id, room)
-    this.inbox.joinRoom(room.id)
+    this.inbox.joinRoom(room.id, room.key)
     return room
   }
 
@@ -258,9 +433,11 @@ export class Agent extends EventEmitter {
       to: room.to,
       type, body,
       inReplyTo: opts.inReplyTo,
-      attach
+      attach,
+      roomKey: room.key
     })
-    await this.inbox.record(env, body)
+    // Mirror locally with attach restored — wire copy is sealed.
+    await this.inbox.record({ ...env, attach: attach || [] }, body)
     return env
   }
 
@@ -276,6 +453,13 @@ export class Agent extends EventEmitter {
 
   async messages (opts) { return this.inbox.list(opts) }
   async thread (id) { return this.inbox.thread(id) }
+
+  // Quarantine view: messages from non-contacts (chat / tool.invoke) land
+  // here instead of the main inbox. Promote a peer to a contact (via
+  // addContact) to move future traffic into the main bucket.
+  async requests (opts = {}) {
+    return this.inbox.list({ ...opts, bucket: 'requests' })
+  }
 
   // ---- tasks ----
   async task (to, payload) {

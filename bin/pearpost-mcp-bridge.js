@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // pearpost-mcp-bridge — spawn a stdio MCP server as a child process and
 // expose its tools over pearpost. Any off-the-shelf MCP server (filesystem,
-// git, fetch, sqlite, …) becomes peer-hostable by pubkey on the DHT
+// git, sqlite, …) becomes peer-hostable by pubkey on the DHT
 // without modification.
 //
 // Usage:

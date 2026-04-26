@@ -14,13 +14,18 @@ Usage:
   pearpost id                           print my pear+agent:// address
   pearpost discover                     join the directory and print peers
   pearpost contacts                     list known contacts
+  pearpost contacts rm <pubhex>         remove a contact and block re-gossip
+  pearpost contacts unblock <pubhex>    let gossip restore a previously removed contact
+  pearpost contacts purge               remove + block every contact (clean slate)
   pearpost add <addr> [alias]           add a contact manually
+  pearpost pair [code] [--alias name]   short-code pairing (omit code to generate one)
   pearpost chat <addr> <text...>        send a chat message
   pearpost send <addr> <type> <json>    send any envelope type with JSON body
   pearpost invoke <addr> <tool> <json>  call a remote tool (RPC)
-  pearpost serve <tool>                 register a built-in echo tool and stay up
-  pearpost tail                         stream live incoming messages
-  pearpost list [n]                     print last n messages (default 20)
+  pearpost serve <tool> [--public]      register a built-in echo tool and stay up
+  pearpost tail [--bucket=main|requests|all]   stream live incoming messages
+  pearpost list [n] [--bucket=...]      print last n messages (default 20)
+  pearpost requests [n]                 print pending messages from non-contacts
   pearpost room new [name]              create a room (prints serialized)
   pearpost room join <serialized>       join a room
   pearpost room send <id> <text...>     send chat to a joined room
@@ -54,6 +59,29 @@ async function run () {
       return shutdown(agent)
 
     case 'contacts': {
+      const sub = rest[0]
+      if (sub === 'rm' || sub === 'remove' || sub === 'delete') {
+        const pub = rest[1]
+        if (!pub) throw new Error('contacts rm: need pubhex')
+        const out = await agent.deleteContact(pub)
+        console.log('removed', out.pubkey, out.blocked ? '(blocked)' : '')
+        return shutdown(agent)
+      }
+      if (sub === 'unblock') {
+        const pub = rest[1]
+        if (!pub) throw new Error('contacts unblock: need pubhex')
+        await agent.unblockContact(pub)
+        console.log('unblocked', pub)
+        return shutdown(agent)
+      }
+      if (sub === 'purge') {
+        const all = await agent.contacts()
+        for (const c of all) {
+          await agent.deleteContact(c.pubkey).catch(err => console.error('!', c.pubkey.slice(0, 12), err.message))
+        }
+        console.log(`purged ${all.length} contact(s) — all blocked`)
+        return shutdown(agent)
+      }
       for (const c of await agent.contacts()) {
         console.log(`${c.pubkey}  ${c.alias || ''}  [${(c.capabilities || []).join(', ')}]`)
       }
@@ -65,6 +93,25 @@ async function run () {
       if (!addr) throw new Error('add: need address')
       const card = await agent.addContact(addr, alias)
       console.log('added', card.pubkey, alias || '')
+      return shutdown(agent)
+    }
+
+    case 'pair': {
+      const aliasIdx = rest.indexOf('--alias')
+      const alias = aliasIdx >= 0 ? rest[aliasIdx + 1] : undefined
+      const positional = rest.filter((tok, i) => {
+        if (tok === '--alias') return false
+        if (aliasIdx >= 0 && i === aliasIdx + 1) return false
+        return true
+      })
+      const code = positional[0]
+      agent.on('pair-code', (c) => {
+        console.log('code:', c)
+        console.log('share this code with the other agent — they run: pearpost pair ' + c)
+      })
+      if (code) console.log('pairing with code:', code)
+      const { peer } = await agent.pair({ code, alias })
+      console.log('paired with', peer.pubkey, peer.alias || '')
       return shutdown(agent)
     }
 
@@ -90,25 +137,42 @@ async function run () {
     }
 
     case 'serve': {
-      const tool = rest[0] || 'echo'
-      agent.registerTool(tool, async (args, ctx) => {
-        console.log(`[tool ${tool}] from=${ctx.from.slice(0, 12)} args=${JSON.stringify(args)}`)
-        return { tool, args, at: Date.now() }
-      })
-      console.log(`serving tool "${tool}" as ${agent.address}`)
+      const args = rest.filter(a => !a.startsWith('--'))
+      const isPublic = rest.includes('--public')
+      const tool = args[0] || 'echo'
+      agent.registerTool(tool, async (toolArgs, ctx) => {
+        console.log(`[tool ${tool}] from=${ctx.from.slice(0, 12)} args=${JSON.stringify(toolArgs)}`)
+        return { tool, args: toolArgs, at: Date.now() }
+      }, { public: isPublic })
+      console.log(`serving tool "${tool}"${isPublic ? ' (public)' : ' (contacts-only)'} as ${agent.address}`)
       console.log('Ctrl+C to stop.')
       keepAlive()
       return
     }
 
     case 'tail': {
-      console.log('listening as', agent.address)
+      const bucket = bucketOpt(rest) || 'main'
+      console.log('listening as', agent.address, `(bucket=${bucket})`)
       console.log('commands:  :chat <addr> <text>   :send <addr> <type> <json>')
       console.log('           :invoke <addr> <tool> <json>   :room send <id> <text>')
-      console.log('           :contacts   :rooms   :quit')
-      agent.on('message', (rec) => printRecord(rec))
+      console.log('           :contacts   :rooms   :requests   :quit')
+      agent.on('message', (rec) => {
+        const recBucket = rec.bucket || 'main'
+        if (bucket !== 'all' && recBucket !== bucket) return
+        printRecord(rec)
+      })
+      agent.on('rejected', (info) => {
+        console.log(`[dropped] from=${info.env.from.slice(0,12)} type=${info.env.type} reason=${info.reason}${info.autoBlocked ? ' (auto-blocked)' : ''}`)
+      })
       startRepl(agent)
       return
+    }
+
+    case 'requests': {
+      const n = parseInt(rest[0] || '20', 10)
+      const msgs = await agent.requests({ limit: n, reverse: true })
+      for (const r of msgs.reverse()) printRecord(r)
+      return shutdown(agent)
     }
 
     case 'discover': {
@@ -121,8 +185,10 @@ async function run () {
     }
 
     case 'list': {
-      const n = parseInt(rest[0] || '20', 10)
-      const msgs = await agent.messages({ limit: n, reverse: true })
+      const positional = rest.filter(a => !a.startsWith('--'))
+      const n = parseInt(positional[0] || '20', 10)
+      const bucket = bucketOpt(rest) || 'main'
+      const msgs = await agent.messages({ limit: n, reverse: true, bucket })
       for (const r of msgs.reverse()) printRecord(r)
       return shutdown(agent)
     }
@@ -197,6 +263,13 @@ async function run () {
   }
 }
 
+function bucketOpt (rest) {
+  for (const a of rest) {
+    if (a.startsWith('--bucket=')) return a.slice('--bucket='.length)
+  }
+  return null
+}
+
 function printRecord (rec) {
   const { env, body } = rec
   const t = new Date(env.ts).toISOString().replace('T', ' ').slice(0, 19)
@@ -252,6 +325,9 @@ async function dispatch (agent, line) {
     console.log('  →', JSON.stringify(value))
   } else if (verb === 'contacts') {
     for (const c of await agent.contacts()) console.log('  ' + c.pubkey + '  ' + (c.alias || ''))
+  } else if (verb === 'requests') {
+    const msgs = await agent.requests({ limit: 50, reverse: true })
+    for (const r of msgs.reverse()) console.log('  ' + r.env.from.slice(0, 12) + '  ' + r.env.type + '  ' + JSON.stringify(r.body))
   } else if (verb === 'rooms') {
     for (const r of agent.rooms()) console.log('  ' + r.id + '  ' + (r.name || ''))
   } else if (verb === 'room') {
