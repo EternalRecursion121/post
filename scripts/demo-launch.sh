@@ -149,4 +149,4 @@ echo "  (terminal positioning best-effort — fallback: snap with Cmd-Ctrl-←)"
 
 # ---- 4. launch tmux demo in current terminal ----
 echo "▶ starting demo: $SCENARIO"
-exec "$ROOT/scripts/demo-tmux.sh" "$SCENARIO" "${PASS_THROUGH[@]}"
+exec "$ROOT/scripts/demo-tmux.sh" "$SCENARIO" ${PASS_THROUGH[@]+"${PASS_THROUGH[@]}"}
