@@ -11,11 +11,25 @@ const COLOURS = {
   peer:  '#FFD166',
   room:  '#C084FC',
 
+  // demo node kinds
+  human:    '#FFD166',
+  agent:    '#B8E86A',
+  delegate: '#6FE3A6',
+  sandbox:  '#C084FC',
+  tool:     '#8AB4FF',
+  service:  '#8C93A8',
+  business: '#F0A65A',
+
   chat:          '#6FE3A6',
   'tool.invoke': '#FFD166',
   'tool.result': '#FFD166',
   'task.request':'#F0A65A',
   'task.result': '#F0A65A',
+  pairing:       '#C084FC',
+  'pairing.accepted': '#C084FC',
+  'contact.added':    '#B8E86A',
+  'sandbox.spawn':    '#C084FC',
+  offer:         '#F0A65A',
   presence:      '#8C93A8',
   ack:           '#555B6E',
 
@@ -48,6 +62,8 @@ export class Graph {
     this._dirty = true
     this._sweepStart = performance.now()
     this.filters = opts.filters || { chat: true, tool: true, task: true, presence: true }
+    this.staticMode = false        // demo mode: pinned positions, no physics
+    this.activeEdgeKey = null      // a|b key of the edge to highlight (current step)
 
     window.addEventListener('resize', () => this.resize())
     canvas.addEventListener('mousemove', (e) => this.onMove(e))
@@ -70,11 +86,48 @@ export class Graph {
     this.canvas.height = r.height * dpr
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     this.w = r.width; this.h = r.height
+    if (this.staticMode) {
+      for (const n of this.nodes) {
+        n.x = this.w * n.nx
+        n.y = this.h * n.ny
+      }
+    }
   }
 
   setFilters (f) { this.filters = f; this._dirty = true }
 
+  // Switch into static, deterministic demo layout. Nodes carry normalized
+  // positions (nx/ny in 0..1) plus a `kind` used for the role colour/shape.
+  // Calling setStaticLayout(null) returns to the default radar/force mode.
+  setStaticLayout (layoutNodes) {
+    if (!layoutNodes) {
+      this.staticMode = false
+      this.activeEdgeKey = null
+      this.nodes = []
+      this.edges = []
+      this._dirty = true
+      return
+    }
+    this.staticMode = true
+    this.nodes = layoutNodes.map(n => ({
+      id: n.id, label: n.label, kind: n.kind, sublabel: n.sublabel,
+      nx: n.x, ny: n.y, vx: 0, vy: 0,
+      x: this.w * n.x, y: this.h * n.y,
+      r: nodeRadius(n.kind)
+    }))
+    this.edges = []
+    this._dirty = true
+  }
+
+  setStaticEdges (edges, activeKey) {
+    if (!this.staticMode) return
+    this.edges = edges || []
+    this.activeEdgeKey = activeKey || null
+    this._dirty = true
+  }
+
   update (nodes, edges) {
+    if (this.staticMode) return // demo mode owns nodes/edges
     const existing = new Map(this.nodes.map(n => [n.id, n]))
     this.nodes = nodes.map((n, i) => {
       const old = existing.get(n.id)
@@ -106,6 +159,16 @@ export class Graph {
   }
 
   simulate (dt) {
+    if (this.staticMode) {
+      // pinned positions, but allow interactive drag while held
+      for (const n of this.nodes) {
+        if (this.dragging === n) continue
+        const tx = this.w * n.nx, ty = this.h * n.ny
+        n.x += (tx - n.x) * 0.18
+        n.y += (ty - n.y) * 0.18
+      }
+      return
+    }
     const cx = this.w / 2, cy = this.h / 2
     const repulse = 9000, spring = 0.05, friction = 0.86, gravity = 0.018
     const id2node = new Map(this.nodes.map(n => [n.id, n]))
@@ -150,6 +213,8 @@ export class Graph {
     const ctx = this.ctx
     ctx.clearRect(0, 0, this.w, this.h)
     const cx = this.w / 2, cy = this.h / 2
+
+    if (this.staticMode) return this._drawStatic(t)
 
     // ---- radar rings ----
     const maxR = Math.min(this.w, this.h) * 0.45
@@ -301,6 +366,147 @@ export class Graph {
     }
   }
 
+  // Demo-mode renderer: deterministic per-scenario layout, kind-aware glyphs,
+  // and a strongly highlighted "active" edge for the current step.
+  _drawStatic (t) {
+    const ctx = this.ctx
+    const now = performance.now()
+
+    // soft baseline grid
+    const gridStep = 56
+    ctx.strokeStyle = hexA(COLOURS.divider, 0.5)
+    ctx.lineWidth = 1
+    for (let x = gridStep; x < this.w; x += gridStep) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, this.h); ctx.stroke()
+    }
+    for (let y = gridStep; y < this.h; y += gridStep) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(this.w, y); ctx.stroke()
+    }
+
+    const id2node = new Map(this.nodes.map(n => [n.id, n]))
+
+    // edges
+    for (const e of this.edges) {
+      const a = id2node.get(e.a), b = id2node.get(e.b)
+      if (!a || !b) continue
+      const isActive = e.key && e.key === this.activeEdgeKey
+      const w = isActive ? 3.2 : Math.min(3.5, 0.8 + Math.log2(1 + (e.count || 1)))
+      const stroke = isActive
+        ? hexA(COLOURS[e.type] || COLOURS.you, 0.95)
+        : hexA('#8AB4FF', 0.32)
+      ctx.strokeStyle = stroke
+      ctx.lineWidth = w
+      ctx.beginPath()
+      ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y)
+      ctx.stroke()
+
+      // arrow head on active edge
+      if (isActive) {
+        const dx = b.x - a.x, dy = b.y - a.y
+        const len = Math.hypot(dx, dy) || 1
+        const ux = dx / len, uy = dy / len
+        const tipX = b.x - ux * (b.r + 6)
+        const tipY = b.y - uy * (b.r + 6)
+        ctx.fillStyle = stroke
+        ctx.beginPath()
+        ctx.moveTo(tipX, tipY)
+        ctx.lineTo(tipX - ux * 10 - uy * 5, tipY - uy * 10 + ux * 5)
+        ctx.lineTo(tipX - ux * 10 + uy * 5, tipY - uy * 10 - ux * 5)
+        ctx.closePath()
+        ctx.fill()
+      }
+    }
+
+    // pulses (along active edge)
+    this.pulses = this.pulses.filter(p => now - p.t0 < 1500)
+    for (const p of this.pulses) {
+      const a = id2node.get(p.from), b = id2node.get(p.to)
+      if (!a || !b) continue
+      const tt = (now - p.t0) / 1500
+      const x = a.x + (b.x - a.x) * tt
+      const y = a.y + (b.y - a.y) * tt
+      const colour = COLOURS[p.type] || '#6FE3A6'
+      ctx.fillStyle = hexA(colour, 1 - tt)
+      ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill()
+      ctx.fillStyle = hexA(colour, (1 - tt) * 0.25)
+      ctx.beginPath(); ctx.arc(x, y, 11, 0, Math.PI * 2); ctx.fill()
+    }
+
+    // nodes
+    for (const n of this.nodes) {
+      const colour = COLOURS[n.kind] || COLOURS.peer
+      const isHover = n === this.hover
+
+      // breathing halo when this node is endpoint of the active edge
+      const isActive = this.edges.some(e => e.key === this.activeEdgeKey && (e.a === n.id || e.b === n.id))
+      if (isActive) {
+        const pulse = (Math.sin(now / 380) + 1) / 2
+        ctx.fillStyle = hexA(colour, 0.10 + pulse * 0.18)
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 12 + pulse * 4, 0, Math.PI * 2); ctx.fill()
+      }
+      if (isHover) {
+        ctx.fillStyle = hexA(colour, 0.18)
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 8, 0, Math.PI * 2); ctx.fill()
+      }
+
+      // glyph by kind
+      ctx.fillStyle = colour
+      if (n.kind === 'human') {
+        // diamond
+        ctx.beginPath()
+        ctx.moveTo(n.x, n.y - n.r)
+        ctx.lineTo(n.x + n.r, n.y)
+        ctx.lineTo(n.x, n.y + n.r)
+        ctx.lineTo(n.x - n.r, n.y)
+        ctx.closePath(); ctx.fill()
+      } else if (n.kind === 'sandbox') {
+        // hex (rounded square)
+        const r = n.r
+        ctx.beginPath()
+        ctx.moveTo(n.x - r, n.y - r * 0.6)
+        ctx.lineTo(n.x, n.y - r)
+        ctx.lineTo(n.x + r, n.y - r * 0.6)
+        ctx.lineTo(n.x + r, n.y + r * 0.6)
+        ctx.lineTo(n.x, n.y + r)
+        ctx.lineTo(n.x - r, n.y + r * 0.6)
+        ctx.closePath(); ctx.fill()
+      } else if (n.kind === 'tool' || n.kind === 'service') {
+        // square
+        ctx.fillRect(n.x - n.r, n.y - n.r, n.r * 2, n.r * 2)
+      } else if (n.kind === 'business') {
+        // pentagon
+        const r = n.r, sides = 5
+        ctx.beginPath()
+        for (let i = 0; i < sides; i++) {
+          const a = -Math.PI / 2 + i * (2 * Math.PI / sides)
+          const px = n.x + Math.cos(a) * r, py = n.y + Math.sin(a) * r
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py)
+        }
+        ctx.closePath(); ctx.fill()
+      } else {
+        // agent / delegate: circle, with inner dot for delegate
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.fill()
+        if (n.kind === 'delegate') {
+          ctx.fillStyle = '#0a0c10'
+          ctx.beginPath(); ctx.arc(n.x, n.y, n.r * 0.42, 0, Math.PI * 2); ctx.fill()
+          ctx.fillStyle = colour
+          ctx.beginPath(); ctx.arc(n.x, n.y, n.r * 0.22, 0, Math.PI * 2); ctx.fill()
+        }
+      }
+
+      // label
+      ctx.fillStyle = COLOURS.text
+      ctx.font = '600 12px "JetBrains Mono", ui-monospace, monospace'
+      ctx.textAlign = 'center'
+      ctx.fillText(n.label || '', n.x, n.y + n.r + 16)
+      if (n.sublabel) {
+        ctx.fillStyle = hexA(COLOURS.text, 0.55)
+        ctx.font = '10px "JetBrains Mono", ui-monospace, monospace'
+        ctx.fillText(n.sublabel, n.x, n.y + n.r + 30)
+      }
+    }
+  }
+
   _typeFiltered (type) {
     for (const [k, types] of Object.entries(FILTER_TO_TYPES)) {
       if (types.includes(type)) return !this.filters[k]
@@ -373,4 +579,17 @@ function hexA (hex, a) {
   if (!m) return hex
   const n = parseInt(m[1], 16)
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`
+}
+
+function nodeRadius (kind) {
+  switch (kind) {
+    case 'human':    return 18
+    case 'business': return 17
+    case 'sandbox':  return 16
+    case 'tool':
+    case 'service':  return 15
+    case 'delegate': return 16
+    case 'agent':    return 16
+    default:         return 14
+  }
 }

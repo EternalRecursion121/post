@@ -22,7 +22,17 @@ const state = {
   filters: { chat: true, tool: true, task: true, presence: true },
   unread: new Map(),             // pubHex/room-id -> count
   swarmPeerCount: 0,
-  cmd: { open: false, query: '', active: 0, items: [] }
+  cmd: { open: false, query: '', active: 0, items: [] },
+  demo: {
+    on: false,                   // demo mode visible
+    scenarios: [],               // metadata from /demo/scenarios
+    currentId: null,             // active scenario id
+    scenario: null,              // full scenario (nodes + steps), once started
+    stepIndex: -1,
+    steps: [],                   // emitted steps so far
+    edges: new Map(),            // a|b key -> { a, b, types:Set, count, key }
+    activeKey: null              // edge key for the current step
+  }
 }
 
 function el (id) { return document.getElementById(id) }
@@ -60,6 +70,10 @@ async function init () {
   const ev = new EventSource('/events')
   ev.onmessage = (e) => {
     const d = JSON.parse(e.data)
+    if (d.kind === 'demo') {
+      handleDemoEvent(d.event)
+      return
+    }
     if (d.kind === 'message') {
       state.records.push(d.record)
       const env = d.record.env
@@ -85,6 +99,8 @@ async function init () {
       rebuildGraph()
     }
   }
+
+  initDemo().catch(err => console.warn('demo init:', err.message || err))
 
   // graph filter chips
   for (const chip of document.querySelectorAll('#graph-filters .chip')) {
@@ -1014,3 +1030,332 @@ function toast (msg) {
   host.appendChild(div)
   setTimeout(() => div.remove(), 2200)
 }
+
+// ---------- demo mode ----------
+
+async function initDemo () {
+  // Wire control buttons
+  el('demo-toggle')?.addEventListener('click', () => toggleDemo())
+  el('demo-reset')?.addEventListener('click', () => demoReset())
+  el('demo-step')?.addEventListener('click', () => demoStep())
+  el('demo-run')?.addEventListener('click', () => demoRun())
+
+  // Fetch scenarios for the picker (kept in state so keyboard 1-4 works)
+  try {
+    const list = await fetch('/demo/scenarios').then(r => r.json())
+    state.demo.scenarios = Array.isArray(list) ? list : []
+    renderDemoScenarios()
+  } catch (err) {
+    console.warn('failed to load scenarios:', err.message || err)
+  }
+
+  // Fetch any in-progress demo state so a late join shows current step
+  try {
+    const snap = await fetch('/demo/state').then(r => r.json())
+    if (snap?.scenarioId) {
+      // turn on demo UI without resetting backend
+      setDemoVisible(true)
+      adoptDemoSnapshot(snap)
+    }
+  } catch {}
+}
+
+function toggleDemo (force) {
+  const on = typeof force === 'boolean' ? force : !state.demo.on
+  setDemoVisible(on)
+  if (!on) {
+    graph.setStaticLayout(null)
+    rebuildGraph() // restore real-app graph
+  } else if (state.demo.scenario) {
+    applyScenarioToGraph(state.demo.scenario)
+  }
+}
+
+function setDemoVisible (on) {
+  state.demo.on = on
+  document.body.classList.toggle('demo-on', on)
+  const stage = el('demo-stage'); if (stage) stage.hidden = !on
+  const panel = el('demo-panel'); if (panel) panel.hidden = !on
+  const sheet = el('right-sheet'); if (sheet) sheet.hidden = on
+  const filters = el('graph-filters'); if (filters) filters.hidden = on
+  const legend = el('graph-legend'); if (legend) legend.hidden = on
+  const demoLegend = el('demo-legend'); if (demoLegend) demoLegend.hidden = !on
+  el('demo-toggle')?.classList.toggle('on', on)
+}
+
+function adoptDemoSnapshot (snap) {
+  if (!snap?.scenario) return
+  state.demo.currentId = snap.scenarioId
+  state.demo.scenario = snap.scenario
+  state.demo.steps = (snap.emittedSteps || []).slice()
+  state.demo.stepIndex = (snap.emittedSteps || []).length - 1
+  applyScenarioToGraph(snap.scenario)
+  renderDemoStage()
+  renderDemoTimeline()
+  if (state.demo.steps.length) {
+    const last = state.demo.steps[state.demo.steps.length - 1]
+    setActiveStep(last, state.demo.stepIndex)
+  }
+}
+
+async function demoStart (id) {
+  if (!id) return
+  setDemoVisible(true)
+  try {
+    const r = await fetch('/demo/start', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ scenario: id })
+    })
+    if (!r.ok) {
+      const txt = await r.text(); toast('start failed: ' + txt); return
+    }
+  } catch (e) { toast('start failed: ' + e.message) }
+}
+async function demoReset () {
+  try { await fetch('/demo/reset', { method: 'POST' }) } catch (e) { toast('reset failed: ' + e.message) }
+}
+async function demoStep () {
+  if (!state.demo.currentId) return toast('pick a scenario first')
+  try {
+    const r = await fetch('/demo/step', { method: 'POST' })
+    const j = await r.json().catch(() => ({}))
+    if (j?.done && !j?.ok) toast('scenario complete')
+  } catch (e) { toast('step failed: ' + e.message) }
+}
+async function demoRun (delayMs = 1600) {
+  if (!state.demo.currentId) return toast('pick a scenario first')
+  try {
+    await fetch('/demo/run', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ delayMs })
+    })
+  } catch (e) { toast('run failed: ' + e.message) }
+}
+
+function handleDemoEvent (ev) {
+  if (!ev) return
+  if (ev.type === 'reset') {
+    state.demo.scenario = null
+    state.demo.currentId = null
+    state.demo.steps = []
+    state.demo.stepIndex = -1
+    state.demo.edges = new Map()
+    state.demo.activeKey = null
+    if (state.demo.on) {
+      graph.setStaticLayout(null)
+      // re-enter empty static stage so the canvas isn't blank-flashing
+      rebuildGraph()
+    }
+    renderDemoStage()
+    renderDemoTimeline()
+    renderDemoScenarios()
+    return
+  }
+  if (ev.type === 'scenario.start') {
+    setDemoVisible(true)
+    state.demo.currentId = ev.scenario.id
+    state.demo.scenario = ev.scenario
+    state.demo.steps = []
+    state.demo.stepIndex = -1
+    state.demo.edges = new Map()
+    state.demo.activeKey = null
+    applyScenarioToGraph(ev.scenario)
+    renderDemoStage()
+    renderDemoTimeline()
+    renderDemoScenarios()
+    return
+  }
+  if (ev.type === 'step') {
+    state.demo.stepIndex = ev.index
+    state.demo.steps.push(ev.step)
+    setActiveStep(ev.step, ev.index)
+    renderDemoStage()
+    renderDemoTimeline()
+    return
+  }
+  if (ev.type === 'custom') {
+    // surface terminal-injected events as small timeline entries
+    appendCustomToTimeline(ev.payload, ev.ts)
+    return
+  }
+}
+
+function applyScenarioToGraph (scenario) {
+  // ev.scenario.nodes carry { id, label, kind, x, y, sublabel } already
+  graph.setStaticLayout(scenario.nodes || [])
+  state.demo.edges = new Map()
+  graph.setStaticEdges([], null)
+}
+
+function setActiveStep (step, index) {
+  if (!step?.from || !step?.to) return
+  const key = step.from + '|' + step.to
+  let edge = state.demo.edges.get(key)
+  if (!edge) {
+    edge = { a: step.from, b: step.to, key, types: [step.type], count: 0, lastTs: Date.now(), type: step.type }
+    state.demo.edges.set(key, edge)
+  } else {
+    if (!edge.types.includes(step.type)) edge.types.push(step.type)
+    edge.type = step.type
+    edge.lastTs = Date.now()
+  }
+  edge.count++
+  state.demo.activeKey = key
+  graph.setStaticEdges([...state.demo.edges.values()], key)
+  graph.pulse(step.from, step.to, { type: step.type })
+}
+
+function renderDemoScenarios () {
+  const ul = el('demo-scenarios')
+  if (!ul) return
+  ul.innerHTML = ''
+  state.demo.scenarios.forEach((s, i) => {
+    const li = document.createElement('li')
+    li.className = 'sc-row' + (s.id === state.demo.currentId ? ' selected' : '')
+    li.innerHTML = `
+      <span class="sc-num">${i + 1}</span>
+      <span class="sc-track">${esc(s.track || '')}</span>
+      <span class="sc-title">${esc(s.title || s.id)}</span>
+      <span class="sc-meta">${s.steps}·</span>
+    `
+    li.title = s.subtitle || ''
+    li.onclick = () => demoStart(s.id)
+    ul.appendChild(li)
+  })
+}
+
+function renderDemoStage () {
+  const sc = state.demo.scenario
+  if (sc) {
+    el('demo-track').textContent = sc.track || ''
+    el('demo-title').textContent = sc.title || ''
+    el('demo-subtitle').textContent = sc.subtitle || ''
+    el('demo-why').textContent = sc.why || ''
+  } else {
+    el('demo-track').textContent = '—'
+    el('demo-title').textContent = '—'
+    el('demo-subtitle').textContent = 'Pick a scenario, then ▶ Next Step.'
+    el('demo-why').textContent = 'Pick a scenario to begin.'
+  }
+
+  const idx = state.demo.stepIndex
+  const step = state.demo.steps[idx]
+  if (!step) {
+    el('demo-step-idx').textContent = '—'
+    el('demo-step-type').textContent = '—'
+    el('demo-step-route').textContent = ''
+    el('demo-step-title').textContent = sc ? 'Press ▶ Next Step to begin.' : '—'
+    el('demo-step-caption').textContent = ''
+    return
+  }
+  const total = sc?.stepCount || sc?.steps?.length || 0
+  el('demo-step-idx').textContent = `${idx + 1}/${total || (idx + 1)}`
+  el('demo-step-type').textContent = step.type || ''
+  el('demo-step-type').className = 'step-type t-' + (step.type || '').replace(/\W+/g, '-')
+  const fromLbl = nodeLabel(step.from)
+  const toLbl = nodeLabel(step.to)
+  el('demo-step-route').textContent = `${fromLbl} → ${toLbl}`
+  el('demo-step-title').textContent = step.title || ''
+  el('demo-step-caption').textContent = step.caption || ''
+}
+
+function nodeLabel (id) {
+  const n = state.demo.scenario?.nodes?.find(x => x.id === id)
+  return n?.label || id
+}
+
+function renderDemoTimeline () {
+  const ol = el('demo-timeline')
+  if (!ol) return
+  ol.innerHTML = ''
+  state.demo.steps.forEach((s, i) => {
+    const li = document.createElement('li')
+    li.className = 'tl-row' + (i === state.demo.stepIndex ? ' active' : '')
+    const route = `${nodeLabel(s.from)} → ${nodeLabel(s.to)}`
+    li.innerHTML = `
+      <span class="tl-idx">${i + 1}</span>
+      <span class="tl-type t-${esc((s.type || '').replace(/\W+/g, '-'))}">${esc(s.type || '')}</span>
+      <span class="tl-title">${esc(s.title || '')}</span>
+      <span class="tl-route">${esc(route)}</span>
+    `
+    ol.appendChild(li)
+  })
+  // scroll the active row into view
+  const active = ol.querySelector('.tl-row.active')
+  if (active) active.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+}
+
+function appendCustomToTimeline (payload, ts) {
+  const ol = el('demo-timeline')
+  if (!ol) return
+  // Real-agent mirror: { source: 'real-agent', direction, type, fromRole, toRole, body, ... }
+  // We show a compact timeline row AND, if the roles match scenario nodes,
+  // pulse the corresponding graph edge so judges can see real envelopes flying.
+  const isRealMirror = payload && typeof payload === 'object' && payload.source === 'real-agent'
+  if (isRealMirror && state.demo.scenario) {
+    const fromRole = payload.fromRole
+    const toRole = payload.toRole
+    const fromNode = state.demo.scenario.nodes?.find(n => n.id === fromRole)
+    const toNode = state.demo.scenario.nodes?.find(n => n.id === toRole)
+    if (fromNode && toNode && payload.direction === 'send') {
+      graph.pulse(fromRole, toRole, { type: payload.type })
+    }
+    const li = document.createElement('li')
+    const dirIcon = payload.direction === 'send' ? '▶' : payload.direction === 'recv' ? '◀' : '·'
+    li.className = 'tl-row tl-real'
+    const route = `${nodeLabel(fromRole)} → ${nodeLabel(toRole)}`
+    const summary = (() => {
+      const b = payload.body
+      if (!b) return ''
+      if (typeof b === 'string') return b
+      if (b.text) return String(b.text)
+      if (b.title) return String(b.title)
+      try { return JSON.stringify(b).slice(0, 80) } catch { return '' }
+    })()
+    li.innerHTML = `
+      <span class="tl-idx">${esc(dirIcon)}</span>
+      <span class="tl-type t-${esc((payload.type || '').replace(/\W+/g, '-'))}">${esc(payload.type || '')}</span>
+      <span class="tl-title">${esc(summary)}</span>
+      <span class="tl-route">${esc(route)}</span>
+    `
+    ol.appendChild(li)
+    li.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    return
+  }
+  const li = document.createElement('li')
+  li.className = 'tl-row tl-custom'
+  const txt = typeof payload === 'string' ? payload : (payload?.text || JSON.stringify(payload))
+  li.innerHTML = `
+    <span class="tl-idx">·</span>
+    <span class="tl-type t-custom">cmd</span>
+    <span class="tl-title">${esc(txt)}</span>
+    <span class="tl-route">${esc(formatTime(ts || Date.now()))}</span>
+  `
+  ol.appendChild(li)
+  li.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+}
+
+// keyboard shortcuts (registered after the existing onGlobalKey handler runs)
+document.addEventListener('keydown', (e) => {
+  const tag = (document.activeElement?.tagName || '').toLowerCase()
+  if (tag === 'input' || tag === 'textarea') return
+  if (e.metaKey || e.ctrlKey || e.altKey) return
+  // D toggles demo, even when off
+  if (e.key === 'd' || e.key === 'D') {
+    if (state.cmd.open) return
+    e.preventDefault(); toggleDemo(); return
+  }
+  if (!state.demo.on) return
+  if (e.key === ' ' || e.key === 'n' || e.key === 'N') {
+    e.preventDefault(); demoStep(); return
+  }
+  if (e.key === 'r' || e.key === 'R') {
+    // R is bound for "reply" in thread view; demo R only fires when demo is on
+    e.preventDefault(); demoReset(); return
+  }
+  if (/^[1-9]$/.test(e.key)) {
+    const i = parseInt(e.key, 10) - 1
+    const sc = state.demo.scenarios[i]
+    if (sc) { e.preventDefault(); demoStart(sc.id) }
+  }
+})

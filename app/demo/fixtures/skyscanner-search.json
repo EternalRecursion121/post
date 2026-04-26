@@ -1,0 +1,246 @@
+{
+  "capturedAt": "2026-04-26T06:16:28.358Z",
+  "query": {
+    "market": "UK",
+    "currency": "GBP",
+    "cabinClass": "CABIN_CLASS_ECONOMY",
+    "adults": 3,
+    "outboundDate": "2026-06-26",
+    "returnDate": "2026-06-30",
+    "origin": "LHR"
+  },
+  "options": {
+    "barcelona": {
+      "city": "barcelona",
+      "cityName": "Barcelona",
+      "iataDestination": "BCN",
+      "pricePerAdultGBP": 339.99,
+      "priceTotalGBP": 1019.97,
+      "bookingAgent": "lastminute.com",
+      "legs": [
+        {
+          "from": "LHR",
+          "fromName": "London Heathrow",
+          "to": "BCN",
+          "toName": "Barcelona",
+          "depart": {
+            "year": 2026,
+            "month": 6,
+            "day": 26,
+            "hour": 20,
+            "minute": 50,
+            "second": 0
+          },
+          "arrive": {
+            "year": 2026,
+            "month": 6,
+            "day": 27,
+            "hour": 0,
+            "minute": 10,
+            "second": 0
+          },
+          "durationMin": 140,
+          "stops": 0,
+          "segments": [
+            {
+              "flightNumber": "VY6653",
+              "carrier": "Vueling Airlines",
+              "carrierIata": "VY",
+              "from": "LHR",
+              "fromName": "London Heathrow",
+              "to": "BCN",
+              "toName": "Barcelona",
+              "depart": {
+                "year": 2026,
+                "month": 6,
+                "day": 26,
+                "hour": 20,
+                "minute": 50,
+                "second": 0
+              },
+              "arrive": {
+                "year": 2026,
+                "month": 6,
+                "day": 27,
+                "hour": 0,
+                "minute": 10,
+                "second": 0
+              },
+              "durationMin": 140
+            }
+          ]
+        },
+        {
+          "from": "BCN",
+          "fromName": "Barcelona",
+          "to": "LHR",
+          "toName": "London Heathrow",
+          "depart": {
+            "year": 2026,
+            "month": 6,
+            "day": 30,
+            "hour": 7,
+            "minute": 30,
+            "second": 0
+          },
+          "arrive": {
+            "year": 2026,
+            "month": 6,
+            "day": 30,
+            "hour": 9,
+            "minute": 10,
+            "second": 0
+          },
+          "durationMin": 160,
+          "stops": 0,
+          "segments": [
+            {
+              "flightNumber": "VY6650",
+              "carrier": "Vueling Airlines",
+              "carrierIata": "VY",
+              "from": "BCN",
+              "fromName": "Barcelona",
+              "to": "LHR",
+              "toName": "London Heathrow",
+              "depart": {
+                "year": 2026,
+                "month": 6,
+                "day": 30,
+                "hour": 7,
+                "minute": 30,
+                "second": 0
+              },
+              "arrive": {
+                "year": 2026,
+                "month": 6,
+                "day": 30,
+                "hour": 9,
+                "minute": 10,
+                "second": 0
+              },
+              "durationMin": 160
+            }
+          ]
+        }
+      ]
+    },
+    "lisbon": {
+      "city": "lisbon",
+      "cityName": "Lisbon",
+      "iataDestination": "LIS",
+      "pricePerAdultGBP": 580.8,
+      "priceTotalGBP": 1742.4,
+      "bookingAgent": "BudgetAir",
+      "legs": [
+        {
+          "from": "LHR",
+          "fromName": "London Heathrow",
+          "to": "LIS",
+          "toName": "Lisbon",
+          "depart": {
+            "year": 2026,
+            "month": 6,
+            "day": 26,
+            "hour": 19,
+            "minute": 50,
+            "second": 0
+          },
+          "arrive": {
+            "year": 2026,
+            "month": 6,
+            "day": 26,
+            "hour": 22,
+            "minute": 40,
+            "second": 0
+          },
+          "durationMin": 170,
+          "stops": 0,
+          "segments": [
+            {
+              "flightNumber": "TP1369",
+              "carrier": "TAP Air Portugal",
+              "carrierIata": "TP",
+              "from": "LHR",
+              "fromName": "London Heathrow",
+              "to": "LIS",
+              "toName": "Lisbon",
+              "depart": {
+                "year": 2026,
+                "month": 6,
+                "day": 26,
+                "hour": 19,
+                "minute": 50,
+                "second": 0
+              },
+              "arrive": {
+                "year": 2026,
+                "month": 6,
+                "day": 26,
+                "hour": 22,
+                "minute": 40,
+                "second": 0
+              },
+              "durationMin": 170
+            }
+          ]
+        },
+        {
+          "from": "LIS",
+          "fromName": "Lisbon",
+          "to": "LHR",
+          "toName": "London Heathrow",
+          "depart": {
+            "year": 2026,
+            "month": 6,
+            "day": 30,
+            "hour": 20,
+            "minute": 10,
+            "second": 0
+          },
+          "arrive": {
+            "year": 2026,
+            "month": 6,
+            "day": 30,
+            "hour": 22,
+            "minute": 55,
+            "second": 0
+          },
+          "durationMin": 165,
+          "stops": 0,
+          "segments": [
+            {
+              "flightNumber": "TP1366",
+              "carrier": "TAP Air Portugal",
+              "carrierIata": "TP",
+              "from": "LIS",
+              "fromName": "Lisbon",
+              "to": "LHR",
+              "toName": "London Heathrow",
+              "depart": {
+                "year": 2026,
+                "month": 6,
+                "day": 30,
+                "hour": 20,
+                "minute": 10,
+                "second": 0
+              },
+              "arrive": {
+                "year": 2026,
+                "month": 6,
+                "day": 30,
+                "hour": 22,
+                "minute": 55,
+                "second": 0
+              },
+              "durationMin": 165
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "groupDiscount": {
+    "perAdultOff": 70,
+    "percentOff": 12
+  }
+}

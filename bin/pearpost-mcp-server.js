@@ -308,18 +308,19 @@ export function normalizeWakeEvent (rec, types = new Set(WAKE_TYPES)) {
   const type = env?.type
   if (!type || !types.has(type)) return null
   const id = env.id || rec?.key || `${env.from || ''}:${env.ts || ''}:${type}`
-  const text = typeof env.body?.text === 'string' ? env.body.text : undefined
+  const body = rec?.body || env.body
+  const text = typeof body?.text === 'string' ? body.text : undefined
   return {
     key: rec?.key || id,
     id,
-    type,
+    ts: env.ts,
     from: env.from,
     to: env.to,
-    ts: env.ts,
+    type,
     bucket: rec?.bucket || 'main',
     inReplyTo: env.inReplyTo,
     text,
-    body: env.body
+    body
   }
 }
 

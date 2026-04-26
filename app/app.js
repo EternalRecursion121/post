@@ -16,6 +16,7 @@ import { fileURLToPath } from 'url'
 import os from 'os'
 
 import { Agent } from '../protocol/index.js'
+import { SCENARIOS, getScenario, listScenarios } from './demo/scenarios.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const UI_DIR = path.join(__dirname, 'ui')
@@ -35,6 +36,40 @@ agent.registerTask('echo', async (args) => ({ echoed: args, at: Date.now() }))
 agent.registerTool('echo', async (args) => ({ echoed: args, at: Date.now() }))
 
 const sseClients = new Set()
+
+// ---------- demo mode (deterministic scripted scenarios) ----------
+//
+// Demo state lives in memory only. Existing PearPost endpoints continue to
+// run in parallel; demo events are broadcast over the same SSE channel
+// under `kind: 'demo'` so the renderer can split them out.
+
+const demo = {
+  scenarioId: null,   // currently loaded scenario id, or null
+  stepIndex: -1,      // last emitted step (−1 ⇒ none yet)
+  startedAt: 0,
+  events: [],         // append-only log of demo events for late-joiners
+  runningToken: 0     // increments to cancel any in-flight /demo/run
+}
+
+function emitDemo (event) {
+  const ev = { ...event, ts: event.ts || Date.now() }
+  demo.events.push(ev)
+  broadcast({ kind: 'demo', event: ev })
+  return ev
+}
+
+function snapshotDemo () {
+  const scenario = demo.scenarioId ? getScenario(demo.scenarioId) : null
+  return {
+    scenarioId: demo.scenarioId,
+    stepIndex: demo.stepIndex,
+    startedAt: demo.startedAt,
+    scenario,
+    emittedSteps: scenario ? scenario.steps.slice(0, demo.stepIndex + 1) : [],
+    eventCount: demo.events.length
+  }
+}
+
 agent.on('message', (rec) => broadcast({ kind: 'message', record: serializeRecord(rec) }))
 agent.on('peer', (card) => broadcast({ kind: 'peer', card }))
 agent.on('presence', (info) => broadcast({ kind: 'presence', presence: info }))
@@ -122,6 +157,74 @@ const server = http.createServer(async (req, res) => {
       const { id, text, type, body: b } = await body(req)
       const env = await agent.sendRoom(id, type || 'chat', b || { text })
       return json(res, { id: env.id })
+    }
+
+    if (req.method === 'GET' && req.url === '/demo/scenarios') {
+      return json(res, listScenarios())
+    }
+    if (req.method === 'GET' && req.url === '/demo/state') {
+      return json(res, snapshotDemo())
+    }
+    if (req.method === 'POST' && req.url === '/demo/reset') {
+      demo.runningToken++
+      demo.scenarioId = null
+      demo.stepIndex = -1
+      demo.startedAt = 0
+      demo.events = []
+      emitDemo({ type: 'reset' })
+      return json(res, { ok: true })
+    }
+    if (req.method === 'POST' && req.url === '/demo/start') {
+      const { scenario } = await body(req)
+      const s = getScenario(scenario)
+      if (!s) { res.writeHead(404); return res.end('unknown scenario: ' + scenario) }
+      demo.runningToken++
+      demo.scenarioId = s.id
+      demo.stepIndex = -1
+      demo.startedAt = Date.now()
+      demo.events = []
+      emitDemo({ type: 'reset' })
+      emitDemo({
+        type: 'scenario.start',
+        scenario: { id: s.id, track: s.track, title: s.title, subtitle: s.subtitle, why: s.why, nodes: s.nodes, stepCount: s.steps.length }
+      })
+      return json(res, { ok: true, scenario: s.id, steps: s.steps.length })
+    }
+    if (req.method === 'POST' && req.url === '/demo/step') {
+      const s = demo.scenarioId && getScenario(demo.scenarioId)
+      if (!s) { res.writeHead(409); return res.end('no scenario loaded') }
+      if (demo.stepIndex + 1 >= s.steps.length) {
+        return json(res, { ok: false, done: true, index: demo.stepIndex })
+      }
+      demo.stepIndex++
+      const step = s.steps[demo.stepIndex]
+      emitDemo({ type: 'step', index: demo.stepIndex, step })
+      return json(res, { ok: true, index: demo.stepIndex, step, done: demo.stepIndex + 1 >= s.steps.length })
+    }
+    if (req.method === 'POST' && req.url === '/demo/run') {
+      const params = await body(req).catch(() => ({}))
+      const delayMs = Math.max(150, Math.min(10_000, parseInt(params.delayMs ?? 1600, 10)))
+      const s = demo.scenarioId && getScenario(demo.scenarioId)
+      if (!s) { res.writeHead(409); return res.end('no scenario loaded') }
+      const token = ++demo.runningToken
+      ;(async () => {
+        while (demo.runningToken === token && demo.stepIndex + 1 < s.steps.length) {
+          demo.stepIndex++
+          const step = s.steps[demo.stepIndex]
+          emitDemo({ type: 'step', index: demo.stepIndex, step })
+          if (demo.stepIndex + 1 >= s.steps.length) break
+          await new Promise(r => setTimeout(r, delayMs))
+        }
+      })().catch(err => console.warn('demo/run error:', err.message || err))
+      return json(res, { ok: true, started: true, delayMs })
+    }
+    if (req.method === 'POST' && req.url === '/demo/event') {
+      const ev = await body(req)
+      // Wrap arbitrary payloads under a stable shape so renderers can route
+      // them. The terminal scripts use this to inject "command echoed"
+      // events into the timeline without owning the demo state machine.
+      const wrapped = emitDemo({ type: 'custom', payload: ev })
+      return json(res, { ok: true, ts: wrapped.ts })
     }
 
     return staticFile(req, res)

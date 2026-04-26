@@ -1,0 +1,1854 @@
+{
+  "label": "LHR-BCN-LHR 2026-06-26/30 adults=3",
+  "sessionToken": "CrQBS0xVdl9TQ1A3UU1BOGtnZUhxQzdBZjk2ektvYXY5NnlhTzFVdm40d0o3TDkyWTBhWldYOXNWT1pBNHdESEsxWUpsV3MxeXExaEN6dG5WeVhkbjZ3bTZQOWE2WFMwVFJSQ2RHS2wyRlhaUTJTX0RwbFEwZGQ0dWZ5LWIza1BHOXM3cmZWUWZjUW93M3VsbmRLZk8tR19DOHBYX25PZi1mbEMybjl0aEVSR3VFaFdnQUpBUUE9IkYKAlVLEgVlbi1HQhoDR0JQIhcKBQoDTEhSEgUKA0JDThoHCOoPEAYYGiIXCgUKA0JDThIFCgNMSFIaBwjqDxAGGB4oATADKiQ3ZTFhZGI2Zi1mOWZhLTRhOGYtYjhhYS02MTE0YTcyMGE1MDQ=-cells2",
+  "status": "RESULT_STATUS_COMPLETE",
+  "note": "Trimmed for docs — top 5 itineraries by price plus referenced legs/segments/carriers/places/agents.",
+  "content": {
+    "results": {
+      "itineraries": {
+        "13554-2606262050--31685-0-9772-2606270010|9772-2606300730--31685-0-13554-2606300910": {
+          "pricingOptions": [
+            {
+              "price": {
+                "amount": "339990",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "lmuk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "339990",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "lmuk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Flmuk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6653%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257CWBALCVY%25257CW%25257C-%25252Cflight%25257C-31685%25257C6650%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257CTBALCVY%25257CT%25257C-%2526carriers%253D-31685%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D339.99%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS4GLJyS3NFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMACUa-sciAAAA%25257C8257956838401862015%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A13%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--31685",
+                      "bookingCode": "W",
+                      "fareBasisCode": "WBALCVY"
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--31685",
+                      "bookingCode": "T",
+                      "fareBasisCode": "TBALCVY"
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "amI7FDhPAOfe",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "344000",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "skyp"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "344000",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "skyp",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fskyp%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6653%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257CWBALCVY%25257C-%25257C-%25252Cflight%25257C-31685%25257C6650%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257CTBALCVY%25257C-%25257C-%2526carriers%253D-31685%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D344.00%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-PS4WIpzq4sEGLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMRaypebruTlXM7k4BAFX_3tAuAAAA%25257C8613111124984475945%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A09%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": "WBALCVY"
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": "TBALCVY"
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "YCPQRqv-jE8N",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "347000",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "mtuk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "347000",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "mtuk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fmtuk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6653%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257C-%25257C-%25257C-%25252Cflight%25257C-31685%25257C6650%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257C-%25257C-%25257C-%2526carriers%253D-31685%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D347.00%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS5WLJLSnNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMVczuTgEArjeYVicAAAA%25257C-5307629280505982445%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A12%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "z8uaK7mrzHz5",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "348000",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "gtuk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "348000",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "gtuk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fgtuk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6653%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257C-%25257C-%25257C-%25252Cflight%25257C-31685%25257C6650%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257C-%25257C-%25257C-%2526carriers%253D-31685%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D348.00%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS5WJJLynNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMVczuTgEAer-Q2CcAAAA%25257C-5307629280505982445%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A12%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "zNBlf-VXmhzl",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "350700",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "s1uk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "350700",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "s1uk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fs1uk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6653%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257C-%25257C-%25257C-%25252Cflight%25257C-31685%25257C6650%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257C-%25257C-%25257C-%2526carriers%253D-31685%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D350.70%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS5WIpNizNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMVczuTgEA8dujPycAAAA%25257C-6405396909230693080%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A16%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "cDq8paLcEF_U",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "356700",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "ctuk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "356700",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "ctuk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fctuk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6653%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257C-%25257C-%25257C-%25252Cflight%25257C-31685%25257C6650%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257C-%25257C-%25257C-%2526carriers%253D-31685%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D356.70%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-PS4WJJLinNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMRaypebruTlXM7k4BAM3tkBIuAAAA%25257C-6405396909230693080%25257C2%252524H4sIAAAAAAAA_-PS4WJJLinNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMRaypebruTlXM7k4BAM3tkBIuAAAA%25257C-9191798821889506091%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A20%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "WBcnG0mt9KCd",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "359910",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "eduk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "359910",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "eduk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Feduk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6653%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257C-%25257C-%25257C-%25252Cflight%25257C-31685%25257C6650%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257C-%25257C-%25257C-%2526carriers%253D-31685%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D359.91%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS4GJJTSnNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMAKr7Nw4iAAAA%25257C-6405396909230693080%25257C2%252524H4sIAAAAAAAA_-NS4GJJTSnNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMAKr7Nw4iAAAA%25257C5331455487010351226%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A12%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "orQNz66J6PcB",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "366000",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "bcuk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "366000",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "bcuk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fbcuk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6653%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257C-%25257C-%25257C-%25252Cflight%25257C-31685%25257C6650%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257C-%25257C-%25257C-%2526carriers%253D-31685%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D366.00%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS5WJJSi7NFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMVczuTgEAMVWtRScAAAA%25257C-1047453956196886277%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A12%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "OZ8TP-u1uc_7",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "377140",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "vuel"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "377140",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "vuel",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fvuel%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Fairli%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6653%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257CWBALCVY%25257C-%25257C-%25252Cflight%25257C-31685%25257C6650%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257CTBALCVY%25257C-%25257C-%2526carriers%253D-31685%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D377.14%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-OS52IpK03NEWLm-JQpxcyxxkehoen7RTYjJgXmKmZ3pwAAkZOjdSEAAAA%25257C-9196765677236863197%25257C1%25252CH4sIAAAAAAAA_-OS52IpK03NEWLmWOMjxczxKVOhoa_nEpsRkwJzFbO7UwAAHnyW9yEAAAA%25257C-7485150577095358536%25257C1%2526q_sources%253DJACQUARD%25252CJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A07%2526pqid%253Dfalse%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": "WBALCVY"
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": "TBALCVY"
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "64VV5v-WmwL_",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "377160",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "xpuk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "377160",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "xpuk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fxpuk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6653%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257CWBALCVY%25257CW%25257CFLY%252BLIGHT%25252Cflight%25257C-31685%25257C6650%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257CTBALCVY%25257CT%25257CFLY%252BLIGHT%2526carriers%253D-31685%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D377.16%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS4GKpKCjNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMAFVZ6FoiAAAA%25257C7197704651866840898%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A20%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--31685",
+                      "bookingCode": "W",
+                      "fareBasisCode": "WBALCVY"
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--31685",
+                      "bookingCode": "T",
+                      "fareBasisCode": "TBALCVY"
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "8QEOR-0CE53Q",
+              "pricingOptionFare": null
+            }
+          ],
+          "legIds": [
+            "13554-2606262050--31685-0-9772-2606270010",
+            "9772-2606300730--31685-0-13554-2606300910"
+          ],
+          "sustainabilityData": null
+        },
+        "13554-2606260955--31685-0-9772-2606261315|9772-2606300730--31685-0-13554-2606300910": {
+          "pricingOptions": [
+            {
+              "price": {
+                "amount": "344000",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "skyp"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "344000",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "skyp",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fskyp%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6651%25257C13554%25257C2026-06-26T09%25253A55%25257C9772%25257C2026-06-26T13%25253A15%25257C140%25257CWBALCVY%25257C-%25257C-%25252Cflight%25257C-31685%25257C6650%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257CTBALCVY%25257C-%25257C-%2526carriers%253D-31685%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D344.00%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-PS4WIpzq4sEGLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMRaypebruTlXM7k4BAFX_3tAuAAAA%25257C4149666714140806214%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A09%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606260955-2606261315--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": "WBALCVY"
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": "TBALCVY"
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "IW2sl-3w5Lu8",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "347000",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "mtuk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "347000",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "mtuk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fmtuk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6651%25257C13554%25257C2026-06-26T09%25253A55%25257C9772%25257C2026-06-26T13%25253A15%25257C140%25257C-%25257C-%25257C-%25252Cflight%25257C-31685%25257C6650%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257C-%25257C-%25257C-%2526carriers%253D-31685%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D347.00%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS5WLJLSnNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMVczuTgEArjeYVicAAAA%25257C-6858720959879493650%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A12%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606260955-2606261315--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "XFz9I2zhfCLe",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "348000",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "gtuk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "348000",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "gtuk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fgtuk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6651%25257C13554%25257C2026-06-26T09%25253A55%25257C9772%25257C2026-06-26T13%25253A15%25257C140%25257C-%25257C-%25257C-%25252Cflight%25257C-31685%25257C6650%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257C-%25257C-%25257C-%2526carriers%253D-31685%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D348.00%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS5WJJLynNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMVczuTgEAer-Q2CcAAAA%25257C-6858720959879493650%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A12%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606260955-2606261315--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "rbHGG8imodeM",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "353700",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "s1uk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "353700",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "s1uk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fs1uk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6651%25257C13554%25257C2026-06-26T09%25253A55%25257C9772%25257C2026-06-26T13%25253A15%25257C140%25257C-%25257C-%25257C-%25252Cflight%25257C-31685%25257C6650%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257C-%25257C-%25257C-%2526carriers%253D-31685%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D353.70%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS5WIpNizNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMVczuTgEA8dujPycAAAA%25257C8728016353675645555%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A16%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606260955-2606261315--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "nsZrKJrCD3_n",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "356700",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "ctuk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "356700",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "ctuk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fctuk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6651%25257C13554%25257C2026-06-26T09%25253A55%25257C9772%25257C2026-06-26T13%25253A15%25257C140%25257C-%25257C-%25257C-%25252Cflight%25257C-31685%25257C6650%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257C-%25257C-%25257C-%2526carriers%253D-31685%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D356.70%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-PS4WJJLinNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMRaypebruTlXM7k4BAM3tkBIuAAAA%25257C8728016353675645555%25257C2%252524H4sIAAAAAAAA_-PS4WJJLinNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMRaypebruTlXM7k4BAM3tkBIuAAAA%25257C-6702791136125704202%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A20%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606260955-2606261315--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "vNi_yu7-GnR1",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "359910",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "eduk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "359910",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "eduk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Feduk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6651%25257C13554%25257C2026-06-26T09%25253A55%25257C9772%25257C2026-06-26T13%25253A15%25257C140%25257C-%25257C-%25257C-%25252Cflight%25257C-31685%25257C6650%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257C-%25257C-%25257C-%2526carriers%253D-31685%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D359.91%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS4GJJTSnNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMAKr7Nw4iAAAA%25257C8728016353675645555%25257C2%252524H4sIAAAAAAAA_-NS4GJJTSnNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMAKr7Nw4iAAAA%25257C-4650598897162184721%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A12%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606260955-2606261315--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "GwPikSLxJzh8",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "366000",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "bcuk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "366000",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "bcuk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fbcuk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6651%25257C13554%25257C2026-06-26T09%25253A55%25257C9772%25257C2026-06-26T13%25253A15%25257C140%25257C-%25257C-%25257C-%25252Cflight%25257C-31685%25257C6650%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257C-%25257C-%25257C-%2526carriers%253D-31685%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D366.00%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS5WJJSi7NFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMVczuTgEAMVWtRScAAAA%25257C6147024338685817261%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A12%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606260955-2606261315--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "Ovhj9_3C56kb",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "377140",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "vuel"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "377140",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "vuel",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fvuel%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Fairli%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6651%25257C13554%25257C2026-06-26T09%25253A55%25257C9772%25257C2026-06-26T13%25253A15%25257C140%25257CWBALCVY%25257C-%25257C-%25252Cflight%25257C-31685%25257C6650%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257CTBALCVY%25257C-%25257C-%2526carriers%253D-31685%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D377.14%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-OS52IpK03NEWLm-JQpxcyxxkehoen7RTYjJgXmKmZ3pwAAkZOjdSEAAAA%25257C-1628905904718456326%25257C1%25252CH4sIAAAAAAAA_-OS52IpK03NEWLmWOMjxczxKVOhoa_nEpsRkwJzFbO7UwAAHnyW9yEAAAA%25257C-7485150577095358536%25257C1%2526q_sources%253DJACQUARD%25252CJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A07%2526pqid%253Dfalse%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606260955-2606261315--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": "WBALCVY"
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": "TBALCVY"
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "ibhxZcIPrZRF",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "377160",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "xpuk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "377160",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "xpuk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fxpuk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6651%25257C13554%25257C2026-06-26T09%25253A55%25257C9772%25257C2026-06-26T13%25253A15%25257C140%25257CWBALCVY%25257CW%25257CFLY%252BLIGHT%25252Cflight%25257C-31685%25257C6650%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257CTBALCVY%25257CT%25257CFLY%252BLIGHT%2526carriers%253D-31685%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D377.16%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS4GKpKCjNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMAFVZ6FoiAAAA%25257C4494283004171762371%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A20%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606260955-2606261315--31685",
+                      "bookingCode": "W",
+                      "fareBasisCode": "WBALCVY"
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--31685",
+                      "bookingCode": "T",
+                      "fareBasisCode": "TBALCVY"
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "CeyL_RtpaaaU",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "490980",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "lmuk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "490980",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "lmuk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Flmuk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6651%25257C13554%25257C2026-06-26T09%25253A55%25257C9772%25257C2026-06-26T13%25253A15%25257C140%25257CWBALCVY%25257CW%25257C-%25252Cflight%25257C-31685%25257C6650%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257CTBALCVY%25257CT%25257C-%2526carriers%253D-31685%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D490.98%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS4GLJyS3NFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMACUa-sciAAAA%25257C-1994466743743663364%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A13%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606260955-2606261315--31685",
+                      "bookingCode": "W",
+                      "fareBasisCode": "WBALCVY"
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--31685",
+                      "bookingCode": "T",
+                      "fareBasisCode": "TBALCVY"
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "GSTQ9EHOy0E0",
+              "pricingOptionFare": null
+            }
+          ],
+          "legIds": [
+            "13554-2606260955--31685-0-9772-2606261315",
+            "9772-2606300730--31685-0-13554-2606300910"
+          ],
+          "sustainabilityData": null
+        },
+        "13554-2606260955--31685-0-9772-2606261315|9772-2606300730--32222-0-13554-2606300910": {
+          "pricingOptions": [
+            {
+              "price": {
+                "amount": "347700",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "xpuk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "347700",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "xpuk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fxpuk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6651%25257C13554%25257C2026-06-26T09%25253A55%25257C9772%25257C2026-06-26T13%25253A15%25257C140%25257CWBALCVY%25257CW%25257CFLY%252BLIGHT%25252Cflight%25257C-32222%25257C5168%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257CZTNNNNGK%25257CZ%25257C-%2526carriers%253D-31685%25252C-32222%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D347.70%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS4GKpKCjNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMAFVZ6FoiAAAA%25257C6345579575090142504%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A20%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606260955-2606261315--31685",
+                      "bookingCode": "W",
+                      "fareBasisCode": "WBALCVY"
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--32222",
+                      "bookingCode": "Z",
+                      "fareBasisCode": "ZTNNNNGK"
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "eYA8je9ZzMP4",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "515700",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "s1uk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "515700",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "s1uk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fs1uk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6651%25257C13554%25257C2026-06-26T09%25253A55%25257C9772%25257C2026-06-26T13%25253A15%25257C140%25257C-%25257C-%25257C-%25252Cflight%25257C-32222%25257C5168%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257C-%25257C-%25257C-%2526carriers%253D-31685%25252C-32222%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D515.70%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS5WIpNizNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMVczuTgEA8dujPycAAAA%25257C-324374590720530334%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A16%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606260955-2606261315--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--32222",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "Ono7pZB1XCbL",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "538000",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "skyp"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "538000",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "skyp",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fskyp%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6651%25257C13554%25257C2026-06-26T09%25253A55%25257C9772%25257C2026-06-26T13%25253A15%25257C140%25257CWBALCVY%25257C-%25257C-%25252Cflight%25257C-32222%25257C5168%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257CZOLMVY%25257CZ%25257C-%2526carriers%253D-31685%25252C-32222%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D538.00%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-PS4WIpzq4sEGLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMRaypebruTlXM7k4BAFX_3tAuAAAA%25257C5604604599331877145%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A09%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606260955-2606261315--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": "WBALCVY"
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--32222",
+                      "bookingCode": "Z",
+                      "fareBasisCode": "ZOLMVY"
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "4eKslInnNGrB",
+              "pricingOptionFare": null
+            }
+          ],
+          "legIds": [
+            "13554-2606260955--31685-0-9772-2606261315",
+            "9772-2606300730--32222-0-13554-2606300910"
+          ],
+          "sustainabilityData": null
+        },
+        "13554-2606262050--31685-0-9772-2606270010|9772-2606300730--32222-0-13554-2606300910": {
+          "pricingOptions": [
+            {
+              "price": {
+                "amount": "347700",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "xpuk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "347700",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "xpuk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fxpuk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6653%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257CWBALCVY%25257CW%25257CFLY%252BLIGHT%25252Cflight%25257C-32222%25257C5168%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257CZTNNNNGK%25257CZ%25257C-%2526carriers%253D-31685%25252C-32222%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D347.70%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS4GKpKCjNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMAFVZ6FoiAAAA%25257C-47675278882173121%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A20%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--31685",
+                      "bookingCode": "W",
+                      "fareBasisCode": "WBALCVY"
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--32222",
+                      "bookingCode": "Z",
+                      "fareBasisCode": "ZTNNNNGK"
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "3MWe1BnPy9Aq",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "512700",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "s1uk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "512700",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "s1uk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fs1uk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6653%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257C-%25257C-%25257C-%25252Cflight%25257C-32222%25257C5168%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257C-%25257C-%25257C-%2526carriers%253D-31685%25252C-32222%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D512.70%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS5WIpNizNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMVczuTgEA8dujPycAAAA%25257C-5172643037914288173%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A16%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--32222",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "PPgMYWTdYJwr",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "538000",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "skyp"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "538000",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "skyp",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fskyp%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-31685%25257C6653%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257CWBALCVY%25257C-%25257C-%25252Cflight%25257C-32222%25257C5168%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257CZOLMVY%25257CZ%25257C-%2526carriers%253D-31685%25252C-32222%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D538.00%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-PS4WIpzq4sEGLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMRaypebruTlXM7k4BAFX_3tAuAAAA%25257C-5837321856011808039%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A09%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--31685",
+                      "bookingCode": "",
+                      "fareBasisCode": "WBALCVY"
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--32222",
+                      "bookingCode": "Z",
+                      "fareBasisCode": "ZOLMVY"
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "-G7DAszvqxPT",
+              "pricingOptionFare": null
+            }
+          ],
+          "legIds": [
+            "13554-2606262050--31685-0-9772-2606270010",
+            "9772-2606300730--32222-0-13554-2606300910"
+          ],
+          "sustainabilityData": null
+        },
+        "13554-2606262050--32222-0-9772-2606270010|9772-2606300730--32222-0-13554-2606300910": {
+          "pricingOptions": [
+            {
+              "price": {
+                "amount": "363450",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "xpuk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "363450",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "xpuk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fxpuk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-32222%25257C5171%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257CNTNNNNGK%25257CN%25257C-%25252Cflight%25257C-32222%25257C5168%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257CZTNNNNGK%25257CZ%25257C-%2526carriers%253D-32222%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D363.45%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS4GKpKCjNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMAFVZ6FoiAAAA%25257C-3191313080477566632%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A20%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--32222",
+                      "bookingCode": "N",
+                      "fareBasisCode": "NTNNNNGK"
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--32222",
+                      "bookingCode": "Z",
+                      "fareBasisCode": "ZTNNNNGK"
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "ctC-Mob5Lo8O",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "640500",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "trup"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "640500",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "trup",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Ftrup%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-32222%25257C5171%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257C-%25257C-%25257C-%25252Cflight%25257C-32222%25257C5168%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257C-%25257C-%25257C-%2526carriers%253D-32222%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D640.50%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS4GIpKSotEGLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMACApcHoiAAAA%25257C3228402219851681177%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A11%2526pqid%253Dfalse%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--32222",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--32222",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "tmNfPzM-wk0a",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "663450",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "iber"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "663450",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "iber",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fiber%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Fairli%252Fflights%253Fitinerary%253Dflight%25257C-32222%25257C5171%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257CNR2N4VY%25257CN%25257CTREUKES%25252Cflight%25257C-32222%25257C5168%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257CZR2N4VY%25257CZ%25257CTREUKES%2526carriers%253D-32222%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D663.45%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS4GLJTEotEmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMAFwOhr8iAAAA%25257C-5051192657835781264%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A08%2526pqid%253Dfalse%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--32222",
+                      "bookingCode": "N",
+                      "fareBasisCode": "NR2N4VY"
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--32222",
+                      "bookingCode": "Z",
+                      "fareBasisCode": "ZR2N4VY"
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "7XI-DhTAHK-v",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "664000",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "gtuk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "664000",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "gtuk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fgtuk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-32222%25257C5171%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257C-%25257C-%25257C-%25252Cflight%25257C-32222%25257C5168%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257C-%25257C-%25257C-%2526carriers%253D-32222%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D664.00%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS5WJJLynNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMVczuTgEAer-Q2CcAAAA%25257C8512625189583727116%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A12%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--32222",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--32222",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "-JoKxNEuspuV",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "665000",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "bcuk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "665000",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "bcuk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fbcuk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-32222%25257C5171%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257C-%25257C-%25257C-%25252Cflight%25257C-32222%25257C5168%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257C-%25257C-%25257C-%2526carriers%253D-32222%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D665.00%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS5WJJSi7NFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMVczuTgEAMVWtRScAAAA%25257C8512625189583727116%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A12%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--32222",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--32222",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "sGosHfyKAtVb",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "667000",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "skyp"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "667000",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "skyp",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fskyp%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-32222%25257C5171%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257CNO2N4VY%25257CN%25257C-%25252Cflight%25257C-32222%25257C5168%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257CZOLMVY%25257CZ%25257C-%2526carriers%253D-32222%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D667.00%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-PS4WIpzq4sEGLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMRaypebruTlXM7k4BAFX_3tAuAAAA%25257C-7889039823801473673%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A09%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--32222",
+                      "bookingCode": "N",
+                      "fareBasisCode": "NO2N4VY"
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--32222",
+                      "bookingCode": "Z",
+                      "fareBasisCode": "ZOLMVY"
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "B1fwFwEZECwc",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "668910",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "eduk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "668910",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "eduk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Feduk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-32222%25257C5171%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257C-%25257C-%25257C-%25252Cflight%25257C-32222%25257C5168%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257C-%25257C-%25257C-%2526carriers%253D-32222%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D668.91%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS4GJJTSnNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMAKr7Nw4iAAAA%25257C7523618079575312706%25257C2%252524H4sIAAAAAAAA_-NS4GJJTSnNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMAKr7Nw4iAAAA%25257C5862212823183667063%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A12%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--32222",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--32222",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "en4uT55KyIJL",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "672000",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "mtuk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "672000",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "mtuk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fmtuk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-32222%25257C5171%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257C-%25257C-%25257C-%25252Cflight%25257C-32222%25257C5168%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257C-%25257C-%25257C-%2526carriers%253D-32222%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D672.00%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS5WLJLSnNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMVczuTgEArjeYVicAAAA%25257C8512625189583727116%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A12%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--32222",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--32222",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "SgWcTgdxUJQD",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "674100",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "ctuk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "674100",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "ctuk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fctuk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-32222%25257C5171%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257C-%25257C-%25257C-%25252Cflight%25257C-32222%25257C5168%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257C-%25257C-%25257C-%2526carriers%253D-32222%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D674.10%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-PS4WJJLinNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMRaypebruTlXM7k4BAM3tkBIuAAAA%25257C-6085114839052393380%25257C2%252524H4sIAAAAAAAA_-PS4WJJLinNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMRaypebruTlXM7k4BAM3tkBIuAAAA%25257C-4070670185584482423%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A20%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--32222",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--32222",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "wdOTrZ7t9WYg",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "690000",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "s1uk"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "690000",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "s1uk",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fs1uk%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-32222%25257C5171%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257C-%25257C-%25257C-%25252Cflight%25257C-32222%25257C5168%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257C-%25257C-%25257C-%2526carriers%253D-32222%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D690.00%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS5WIpNizNFmLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMVczuTgEA8dujPycAAAA%25257C-1722865699087064357%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A16%2526pqid%253Dtrue%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--32222",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--32222",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "i1-bzNFXqSiz",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "762450",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "carl"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "762450",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "carl",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fcarl%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-32222%25257C5171%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257C-%25257C-%25257C-%25252Cflight%25257C-32222%25257C5168%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257C-%25257C-%25257C-%2526carriers%253D-32222%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D762.45%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS4GJJTizKEWLm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMALq_wGUiAAAA%25257C111700336121498179%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A12%2526pqid%253Dfalse%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--32222",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--32222",
+                      "bookingCode": "",
+                      "fareBasisCode": ""
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "I20m-Skpufdt",
+              "pricingOptionFare": null
+            },
+            {
+              "price": {
+                "amount": "822450",
+                "unit": "PRICE_UNIT_MILLI",
+                "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+              },
+              "agentIds": [
+                "ttho"
+              ],
+              "items": [
+                {
+                  "price": {
+                    "amount": "822450",
+                    "unit": "PRICE_UNIT_MILLI",
+                    "updateStatus": "PRICE_UPDATE_STATUS_UNSPECIFIED"
+                  },
+                  "agentId": "ttho",
+                  "deepLink": "https://agw.skyscnr.com/v1/redirect?pageUrl=https%3A%2F%2Fskyscanner.pxf.io%2Fc%2F2850210%2F1103265%2F13416%3Fu%3Dhttps%253A%252F%252Fwww.skyscanner.net%252Ftransport_deeplink%252F4.0%252FUK%252Fen-GB%252FGBP%252Fttho%252F2%252F13554.9772.2026-06-26%252C9772.13554.2026-06-30%252Fair%252Ftrava%252Fflights%253Fitinerary%253Dflight%25257C-32222%25257C5171%25257C13554%25257C2026-06-26T20%25253A50%25257C9772%25257C2026-06-27T00%25253A10%25257C140%25257CZRLVYM%25257C-%25257C-%25252Cflight%25257C-32222%25257C5168%25257C9772%25257C2026-06-30T07%25253A30%25257C13554%25257C2026-06-30T09%25253A10%25257C160%25257CZRLVYM%25257C-%25257C-%2526carriers%253D-32222%2526operators%253D-31685%25252C-31685%2526passengers%253D3%2526channel%253Ddataapi%2526cabin_class%253Deconomy%2526fps_session_id%253D7e1adb6f-f9fa-4a8f-b8aa-6114a720a504%2526ticket_price%253D822.45%2526is_npt%253Dfalse%2526is_multipart%253Dfalse%2526client_id%253Dskyscanner_b2b%2526request_id%253D6a8af3c8-1e1e-4da4-8cc0-98d88de457f1%2526q_ids%253DH4sIAAAAAAAA_-NS4GIpKcnIF2Lm-JQpxcyxxkehoen7RTaNhr6eS2xGTArMALHyoLQiAAAA%25257C3260436965412634896%25257C2%2526q_sources%253DJACQUARD%2526commercial_filters%253Dfalse%2526q_datetime_utc%253D2026-04-26T06%25253A14%25253A11%2526pqid%253Dfalse%2526fare_type%253Dbase_fare%2526api_pbs%253Dtrue%2526app_id%253DXcrp8dwNPc2qKWcJFt%2525252BkahixUeJCCBJFJsKl8%2525252BLOWN0YQDxUkLSHzaz4RiWF7qVK&impactMediaPartnerId=2850210",
+                  "fares": [
+                    {
+                      "segmentId": "13554-9772-2606262050-2606270010--32222",
+                      "bookingCode": "",
+                      "fareBasisCode": "ZRLVYM"
+                    },
+                    {
+                      "segmentId": "9772-13554-2606300730-2606300910--32222",
+                      "bookingCode": "",
+                      "fareBasisCode": "ZRLVYM"
+                    }
+                  ]
+                }
+              ],
+              "transferType": "TRANSFER_TYPE_MANAGED",
+              "id": "r3aNRJlYdkQC",
+              "pricingOptionFare": null
+            }
+          ],
+          "legIds": [
+            "13554-2606262050--32222-0-9772-2606270010",
+            "9772-2606300730--32222-0-13554-2606300910"
+          ],
+          "sustainabilityData": null
+        }
+      },
+      "legs": {
+        "13554-2606262050--31685-0-9772-2606270010": {
+          "originPlaceId": "95565050",
+          "destinationPlaceId": "95565085",
+          "departureDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 26,
+            "hour": 20,
+            "minute": 50,
+            "second": 0
+          },
+          "arrivalDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 27,
+            "hour": 0,
+            "minute": 10,
+            "second": 0
+          },
+          "durationInMinutes": 140,
+          "stopCount": 0,
+          "marketingCarrierIds": [
+            "-31685"
+          ],
+          "operatingCarrierIds": [
+            "-31685"
+          ],
+          "segmentIds": [
+            "13554-9772-2606262050-2606270010--31685"
+          ]
+        },
+        "9772-2606300730--31685-0-13554-2606300910": {
+          "originPlaceId": "95565085",
+          "destinationPlaceId": "95565050",
+          "departureDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 30,
+            "hour": 7,
+            "minute": 30,
+            "second": 0
+          },
+          "arrivalDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 30,
+            "hour": 9,
+            "minute": 10,
+            "second": 0
+          },
+          "durationInMinutes": 160,
+          "stopCount": 0,
+          "marketingCarrierIds": [
+            "-31685"
+          ],
+          "operatingCarrierIds": [
+            "-31685"
+          ],
+          "segmentIds": [
+            "9772-13554-2606300730-2606300910--31685"
+          ]
+        },
+        "13554-2606260955--31685-0-9772-2606261315": {
+          "originPlaceId": "95565050",
+          "destinationPlaceId": "95565085",
+          "departureDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 26,
+            "hour": 9,
+            "minute": 55,
+            "second": 0
+          },
+          "arrivalDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 26,
+            "hour": 13,
+            "minute": 15,
+            "second": 0
+          },
+          "durationInMinutes": 140,
+          "stopCount": 0,
+          "marketingCarrierIds": [
+            "-31685"
+          ],
+          "operatingCarrierIds": [
+            "-31685"
+          ],
+          "segmentIds": [
+            "13554-9772-2606260955-2606261315--31685"
+          ]
+        },
+        "9772-2606300730--32222-0-13554-2606300910": {
+          "originPlaceId": "95565085",
+          "destinationPlaceId": "95565050",
+          "departureDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 30,
+            "hour": 7,
+            "minute": 30,
+            "second": 0
+          },
+          "arrivalDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 30,
+            "hour": 9,
+            "minute": 10,
+            "second": 0
+          },
+          "durationInMinutes": 160,
+          "stopCount": 0,
+          "marketingCarrierIds": [
+            "-32222"
+          ],
+          "operatingCarrierIds": [
+            "-31685"
+          ],
+          "segmentIds": [
+            "9772-13554-2606300730-2606300910--32222"
+          ]
+        },
+        "13554-2606262050--32222-0-9772-2606270010": {
+          "originPlaceId": "95565050",
+          "destinationPlaceId": "95565085",
+          "departureDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 26,
+            "hour": 20,
+            "minute": 50,
+            "second": 0
+          },
+          "arrivalDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 27,
+            "hour": 0,
+            "minute": 10,
+            "second": 0
+          },
+          "durationInMinutes": 140,
+          "stopCount": 0,
+          "marketingCarrierIds": [
+            "-32222"
+          ],
+          "operatingCarrierIds": [
+            "-31685"
+          ],
+          "segmentIds": [
+            "13554-9772-2606262050-2606270010--32222"
+          ]
+        }
+      },
+      "segments": {
+        "13554-9772-2606262050-2606270010--31685": {
+          "originPlaceId": "95565050",
+          "destinationPlaceId": "95565085",
+          "departureDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 26,
+            "hour": 20,
+            "minute": 50,
+            "second": 0
+          },
+          "arrivalDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 27,
+            "hour": 0,
+            "minute": 10,
+            "second": 0
+          },
+          "durationInMinutes": 140,
+          "marketingFlightNumber": "6653",
+          "marketingCarrierId": "-31685",
+          "operatingCarrierId": "-31685"
+        },
+        "9772-13554-2606300730-2606300910--31685": {
+          "originPlaceId": "95565085",
+          "destinationPlaceId": "95565050",
+          "departureDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 30,
+            "hour": 7,
+            "minute": 30,
+            "second": 0
+          },
+          "arrivalDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 30,
+            "hour": 9,
+            "minute": 10,
+            "second": 0
+          },
+          "durationInMinutes": 160,
+          "marketingFlightNumber": "6650",
+          "marketingCarrierId": "-31685",
+          "operatingCarrierId": "-31685"
+        },
+        "13554-9772-2606260955-2606261315--31685": {
+          "originPlaceId": "95565050",
+          "destinationPlaceId": "95565085",
+          "departureDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 26,
+            "hour": 9,
+            "minute": 55,
+            "second": 0
+          },
+          "arrivalDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 26,
+            "hour": 13,
+            "minute": 15,
+            "second": 0
+          },
+          "durationInMinutes": 140,
+          "marketingFlightNumber": "6651",
+          "marketingCarrierId": "-31685",
+          "operatingCarrierId": "-31685"
+        },
+        "9772-13554-2606300730-2606300910--32222": {
+          "originPlaceId": "95565085",
+          "destinationPlaceId": "95565050",
+          "departureDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 30,
+            "hour": 7,
+            "minute": 30,
+            "second": 0
+          },
+          "arrivalDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 30,
+            "hour": 9,
+            "minute": 10,
+            "second": 0
+          },
+          "durationInMinutes": 160,
+          "marketingFlightNumber": "5168",
+          "marketingCarrierId": "-32222",
+          "operatingCarrierId": "-31685"
+        },
+        "13554-9772-2606262050-2606270010--32222": {
+          "originPlaceId": "95565050",
+          "destinationPlaceId": "95565085",
+          "departureDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 26,
+            "hour": 20,
+            "minute": 50,
+            "second": 0
+          },
+          "arrivalDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 27,
+            "hour": 0,
+            "minute": 10,
+            "second": 0
+          },
+          "durationInMinutes": 140,
+          "marketingFlightNumber": "5171",
+          "marketingCarrierId": "-32222",
+          "operatingCarrierId": "-31685"
+        }
+      },
+      "carriers": {
+        "-31685": {
+          "name": "Vueling Airlines",
+          "allianceId": "",
+          "imageUrl": "https://logos.skyscnr.com/images/airlines/07.png",
+          "iata": "VY",
+          "icao": "VLG",
+          "displayCode": "VY"
+        },
+        "-32222": {
+          "name": "Iberia",
+          "allianceId": "-32000",
+          "imageUrl": "https://logos.skyscnr.com/images/airlines/IB.png",
+          "iata": "IB",
+          "icao": "IBE",
+          "displayCode": "IB"
+        }
+      },
+      "places": {
+        "95565050": {
+          "entityId": "95565050",
+          "parentId": "27544008",
+          "name": "London Heathrow",
+          "type": "PLACE_TYPE_AIRPORT",
+          "iata": "LHR",
+          "coordinates": null
+        },
+        "95565085": {
+          "entityId": "95565085",
+          "parentId": "27548283",
+          "name": "Barcelona",
+          "type": "PLACE_TYPE_AIRPORT",
+          "iata": "BCN",
+          "coordinates": null
+        }
+      },
+      "agents": {
+        "bcuk": {
+          "name": "Booking.com",
+          "type": "AGENT_TYPE_TRAVEL_AGENT",
+          "imageUrl": "https://logos.skyscnr.com/images/websites/bcuk.png",
+          "feedbackCount": 13350,
+          "rating": 4.89,
+          "isOptimisedForMobile": true
+        },
+        "carl": {
+          "name": "Carlton Leisure",
+          "type": "AGENT_TYPE_TRAVEL_AGENT",
+          "imageUrl": "https://logos.skyscnr.com/images/websites/carl.png",
+          "feedbackCount": 4822,
+          "rating": 4.79,
+          "isOptimisedForMobile": true
+        },
+        "ctuk": {
+          "name": "Trip.com",
+          "type": "AGENT_TYPE_TRAVEL_AGENT",
+          "imageUrl": "https://logos.skyscnr.com/images/websites/ctuk.png",
+          "feedbackCount": 21920,
+          "rating": 4.82,
+          "isOptimisedForMobile": true
+        },
+        "eduk": {
+          "name": "eDreams",
+          "type": "AGENT_TYPE_TRAVEL_AGENT",
+          "imageUrl": "https://logos.skyscnr.com/images/websites/eduk.png",
+          "feedbackCount": 5840,
+          "rating": 3.28,
+          "isOptimisedForMobile": true
+        },
+        "gtuk": {
+          "name": "Gotogate",
+          "type": "AGENT_TYPE_TRAVEL_AGENT",
+          "imageUrl": "https://logos.skyscnr.com/images/websites/gtuk.png",
+          "feedbackCount": 6611,
+          "rating": 4.27,
+          "isOptimisedForMobile": true
+        },
+        "iber": {
+          "name": "Iberia",
+          "type": "AGENT_TYPE_AIRLINE",
+          "imageUrl": "https://logos.skyscnr.com/images/websites/iber.png",
+          "feedbackCount": 367,
+          "rating": 2.52,
+          "isOptimisedForMobile": true
+        },
+        "lmuk": {
+          "name": "lastminute.com",
+          "type": "AGENT_TYPE_TRAVEL_AGENT",
+          "imageUrl": "https://logos.skyscnr.com/images/websites/lmuk.png",
+          "feedbackCount": 4606,
+          "rating": 4.58,
+          "isOptimisedForMobile": true
+        },
+        "mtuk": {
+          "name": "Mytrip",
+          "type": "AGENT_TYPE_TRAVEL_AGENT",
+          "imageUrl": "https://logos.skyscnr.com/images/websites/mtuk.png",
+          "feedbackCount": 11709,
+          "rating": 4.34,
+          "isOptimisedForMobile": true
+        },
+        "s1uk": {
+          "name": "BudgetAir",
+          "type": "AGENT_TYPE_TRAVEL_AGENT",
+          "imageUrl": "https://logos.skyscnr.com/images/websites/s1uk.png",
+          "feedbackCount": 7485,
+          "rating": 3.27,
+          "isOptimisedForMobile": true
+        },
+        "skyp": {
+          "name": "Kiwi.com",
+          "type": "AGENT_TYPE_TRAVEL_AGENT",
+          "imageUrl": "https://logos.skyscnr.com/images/websites/skyp.png",
+          "feedbackCount": 12773,
+          "rating": 4.1,
+          "isOptimisedForMobile": true
+        },
+        "trup": {
+          "name": "TravelUp",
+          "type": "AGENT_TYPE_TRAVEL_AGENT",
+          "imageUrl": "https://logos.skyscnr.com/images/websites/trup.png",
+          "feedbackCount": 12708,
+          "rating": 3.43,
+          "isOptimisedForMobile": true
+        },
+        "ttho": {
+          "name": "The Travel House",
+          "type": "AGENT_TYPE_TRAVEL_AGENT",
+          "imageUrl": "https://logos.skyscnr.com/images/websites/ttho.png",
+          "feedbackCount": 580,
+          "rating": 3.99,
+          "isOptimisedForMobile": true
+        },
+        "vuel": {
+          "name": "Vueling Airlines",
+          "type": "AGENT_TYPE_AIRLINE",
+          "imageUrl": "https://logos.skyscnr.com/images/websites/vuel.png",
+          "feedbackCount": 657,
+          "rating": 3.88,
+          "isOptimisedForMobile": true
+        },
+        "xpuk": {
+          "name": "Expedia",
+          "type": "AGENT_TYPE_TRAVEL_AGENT",
+          "imageUrl": "https://logos.skyscnr.com/images/websites/xpuk.png",
+          "feedbackCount": 8555,
+          "rating": 4.67,
+          "isOptimisedForMobile": true
+        }
+      }
+    }
+  }
+}

@@ -77,8 +77,8 @@ async function main () {
     const agent = await runtime.startAgent()
 
     agent.emit('message', { key: 'presence-1', env: { id: 'presence-1', type: 'presence', from: 'a', to: 'b', ts: 1 }, bucket: 'main' })
-    agent.emit('message', { key: 'chat-1', env: { id: 'chat-1', type: 'chat', from: 'a', to: 'b', ts: 2, body: { text: 'hi' } }, bucket: 'main' })
-    agent.emit('message', { key: 'chat-1', env: { id: 'chat-1', type: 'chat', from: 'a', to: 'b', ts: 2, body: { text: 'hi' } }, bucket: 'main' })
+    agent.emit('message', { key: 'chat-1', env: { id: 'chat-1', type: 'chat', from: 'a', to: 'b', ts: 2 }, body: { text: 'hi from decrypted body' }, bucket: 'main' })
+    agent.emit('message', { key: 'chat-1', env: { id: 'chat-1', type: 'chat', from: 'a', to: 'b', ts: 2 }, body: { text: 'hi from decrypted body' }, bucket: 'main' })
     await wait(100)
 
     const lines = (await fs.readFile(spool, 'utf8')).trim().split('\n')
@@ -86,7 +86,8 @@ async function main () {
     const event = JSON.parse(lines[0])
     assertEq(event.type, 'chat')
     assertEq(event.id, 'chat-1')
-    assertEq(event.text, 'hi')
+    assertEq(event.text, 'hi from decrypted body')
+    assertEq(event.body.text, 'hi from decrypted body')
 
     const state = JSON.parse(await fs.readFile(seen, 'utf8'))
     assertEq(state.seen.includes('chat-1'), true)

@@ -13,6 +13,7 @@
       <span class="me-addr" id="me-addr" title="click to copy"></span>
       <span class="me-caps" id="me-caps"></span>
       <span class="spacer"></span>
+      <button id="demo-toggle" class="demo-toggle" title="toggle demo mode (D)">DEMO</button>
       <span class="dht" id="dht-status" title="DHT status">
         <i class="dot"></i><span class="lbl">connecting…</span>
       </span>
@@ -41,6 +42,25 @@
 
     <main id="main">
       <canvas id="graph"></canvas>
+
+      <!-- Demo mode caption overlay (hidden when demo is inactive) -->
+      <div id="demo-stage" hidden>
+        <div class="stage-head">
+          <div class="track" id="demo-track">—</div>
+          <div class="title" id="demo-title">—</div>
+          <div class="subtitle" id="demo-subtitle">—</div>
+        </div>
+        <div class="stage-card current" id="demo-current">
+          <div class="step-meta">
+            <span class="step-idx" id="demo-step-idx">—</span>
+            <span class="step-type" id="demo-step-type">—</span>
+            <span class="step-route" id="demo-step-route"></span>
+          </div>
+          <div class="step-title" id="demo-step-title">Press ▶ Next Step to begin.</div>
+          <div class="step-caption" id="demo-step-caption"></div>
+        </div>
+      </div>
+
       <div id="graph-filters">
         <button class="chip on chat"     data-filter="chat">chat</button>
         <button class="chip on tool"     data-filter="tool">tool</button>
@@ -52,10 +72,42 @@
         <span class="peer"><i class="swatch"></i>peer</span>
         <span class="room"><i class="swatch"></i>room</span>
       </div>
+      <div id="demo-legend" hidden>
+        <span class="human"><i class="swatch"></i>human</span>
+        <span class="agent"><i class="swatch"></i>agent</span>
+        <span class="delegate"><i class="swatch"></i>delegate</span>
+        <span class="sandbox"><i class="swatch"></i>sandbox</span>
+        <span class="tool"><i class="swatch"></i>tool/service</span>
+        <span class="business"><i class="swatch"></i>business</span>
+      </div>
       <div id="edge-tooltip"></div>
     </main>
 
     <aside id="right-sheet"></aside>
+
+    <!-- Demo panel — replaces right-sheet visually when demo mode is on -->
+    <aside id="demo-panel" hidden>
+      <div class="panel-h">SCENARIOS</div>
+      <ul id="demo-scenarios"></ul>
+
+      <div class="panel-h">WHY THIS MATTERS</div>
+      <div id="demo-why" class="why-card">Pick a scenario to begin.</div>
+
+      <div class="panel-h">TIMELINE</div>
+      <ol id="demo-timeline"></ol>
+
+      <div class="panel-controls">
+        <button id="demo-reset" title="reset (R)">↺ RESET</button>
+        <button id="demo-step"  title="next step (Space / N)">▶ NEXT STEP</button>
+        <button id="demo-run"   title="run all">⏵⏵ RUN</button>
+      </div>
+      <div class="panel-foot">
+        <span class="kbd">Space/N</span> next ·
+        <span class="kbd">R</span> reset ·
+        <span class="kbd">1-4</span> scenario ·
+        <span class="kbd">D</span> toggle demo
+      </div>
+    </aside>
 
     <div id="hint-bar">
       <span><span class="k">⌘K</span>command</span>
@@ -63,6 +115,7 @@
       <span><span class="k">⇧↵</span>peer</span>
       <span><span class="k">⌘↵</span>send</span>
       <span><span class="k">R</span>reply</span>
+      <span><span class="k">D</span>demo</span>
       <span><span class="k">Esc</span>back</span>
     </div>
   </div>

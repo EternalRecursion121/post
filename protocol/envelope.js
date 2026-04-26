@@ -30,7 +30,16 @@ export const TYPES = [
   'tool.invoke',
   'tool.result',
   'presence',
-  'ack'
+  'ack',
+  // Application-level event types used by demos and higher-level flows.
+  // The protocol does not interpret these; they are just signed/sealed
+  // envelopes whose `body` is opaque to the wire layer.
+  'pairing',
+  'pairing.accepted',
+  'contact.added',
+  'sandbox.spawn',
+  'sandbox.result',
+  'offer'
 ]
 
 // Address forms for `to`:
